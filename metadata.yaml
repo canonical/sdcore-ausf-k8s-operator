@@ -1,0 +1,27 @@
+name: sdcore-ausf
+
+display-name: SD-CORE 5G AUSF
+summary: A Charmed Operator for SDCORE's AUSF component.
+description: |
+  A Charmed Operator for SDCORE's Authentication Server Function (AUSF) component.
+
+containers:
+  ausf:
+    resource: ausf-image
+    mounts:
+      - storage: config
+        location: /etc/ausf/
+
+resources:
+  ausf-image:
+    type: oci-image
+    description: OCI image for 5G ausf
+    upstream-source: omecproject/5gc-ausf:master-c84dff4
+
+storage:
+  config:
+    type: filesystem
+    minimum-size: 1M
+
+assumes:
+  - k8s-api

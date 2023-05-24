@@ -3,7 +3,7 @@ name: sdcore-ausf
 display-name: SD-Core 5G AUSF
 summary: A Charmed Operator for SDCORE's AUSF component.
 description: |
-  A Charmed Operator for SDCORE's Authentication Server Function (AUSF) component.
+  A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component.
 
 containers:
   ausf:

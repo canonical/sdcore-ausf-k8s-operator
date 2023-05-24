@@ -12,7 +12,7 @@
   <h1>SD-CORE AUSF Operator</h1>
 </div>
 
-A Charmed Operator for SDCORE's Authentication Server Function (AUSF) component. 
+A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component. 
 
 ## Usage
 

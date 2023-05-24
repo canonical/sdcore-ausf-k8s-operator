@@ -2,7 +2,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charmed operator for the 5G AUSF service."""
+"""Charmed operator for the SD-Core's AUSF service."""
 
 import logging
 

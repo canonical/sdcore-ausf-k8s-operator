@@ -10,7 +10,7 @@ containers:
     resource: ausf-image
     mounts:
       - storage: config
-        location: /etc/ausf/
+        location: /free5gc/config
 
 resources:
   ausf-image:
@@ -25,3 +25,7 @@ storage:
 
 assumes:
   - k8s-api
+
+requires:
+  fiveg_nrf:
+    interface: fiveg_nrf

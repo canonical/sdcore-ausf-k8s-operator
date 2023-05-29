@@ -1,1 +1,5 @@
 ops
+lightkube
+lightkube-models
+pydantic
+pytest-interface-tester

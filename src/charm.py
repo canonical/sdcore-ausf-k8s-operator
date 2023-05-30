@@ -83,7 +83,7 @@ class AUSFOperatorCharm(CharmBase):
         """
         content = self._render_config_file(
             ausf_group_id=AUSF_GROUP_ID,
-            ausf_url=self._ausf_hostname,
+            ausf_ip=self._pod_ip,
             nrf_url=self._nrf_requires.nrf_url,
             sbi_port=SBI_PORT,
         )
@@ -98,7 +98,7 @@ class AUSFOperatorCharm(CharmBase):
         self,
         *,
         ausf_group_id: str,
-        ausf_url: str,
+        ausf_ip: str,
         sbi_port: int,
         nrf_url: str,
     ):
@@ -106,7 +106,7 @@ class AUSFOperatorCharm(CharmBase):
 
         Args:
             ausf_group_id (str): Group ID of the AUSF.
-            ausf_url (str): URL of the AUSF.
+            ausf_ip (str): IP of the AUSF.
             nrf_url (str): URL of the NRF.
             sbi_port (int): AUSF SBi port.
         """
@@ -114,7 +114,7 @@ class AUSFOperatorCharm(CharmBase):
         template = jinja2_environment.get_template(CONFIG_TEMPLATE_NAME)
         content = template.render(
             ausf_group_id=ausf_group_id,
-            ausf_url=ausf_url,
+            ausf_ip=ausf_ip,
             nrf_url=nrf_url,
             sbi_port=sbi_port,
         )
@@ -233,15 +233,6 @@ class AUSFOperatorCharm(CharmBase):
             bool: Whether the NRF data is available.
         """
         return bool(self._nrf_requires.nrf_url)
-
-    @property
-    def _ausf_hostname(self) -> str:
-        """Build and return the AUSF hostname in the cluster.
-
-        Returns:
-            str: The AUSF hostname.
-        """
-        return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
 
 if __name__ == "__main__":  # pragma: no cover

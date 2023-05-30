@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer
-from scenario import Container, Context, Model, Mount, Relation, State  # type: ignore[import]
+from scenario import Container, Context, Mount, Relation, State  # type: ignore[import]
 
 from charm import AUSFOperatorCharm
 
@@ -88,7 +88,6 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             containers=[container],
             relations=[self.nrf_relation],
-            model=Model(name="whatever"),
         )
         patch_check_output.return_value = b"1.1.1.1"
 
@@ -114,7 +113,6 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             containers=[container],
             relations=[self.nrf_relation],
-            model=Model(name="whatever"),
         )
         patch_check_output.return_value = "1.1.1.1".encode()
         with open(Path(config_dir.name) / "ausfcfg.conf", "w") as existing_config:
@@ -292,7 +290,6 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             containers=[container],
             relations=[self.nrf_relation],
-            model=Model(name="whatever"),
         )
         patch_check_output.return_value = "1.1.1.1".encode()
 

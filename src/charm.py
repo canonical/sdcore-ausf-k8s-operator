@@ -7,6 +7,7 @@
 import logging
 from ipaddress import IPv4Address
 from subprocess import check_output
+from typing import Optional
 
 from charms.observability_libs.v1.kubernetes_service_patch import (  # type: ignore[import]
     KubernetesServicePatch,
@@ -45,6 +46,7 @@ class AUSFOperatorCharm(CharmBase):
         )
 
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)
+        self.framework.observe(self.on.fiveg_nrf_relation_joined, self._configure_ausf)
         self.framework.observe(self._nrf_requires.on.nrf_available, self._configure_ausf)
 
     def _configure_ausf(
@@ -71,6 +73,10 @@ class AUSFOperatorCharm(CharmBase):
             self.unit.status = WaitingStatus("Waiting for storage to be attached")
             event.defer()
             return
+        if not _get_pod_ip():
+            self.unit.status = WaitingStatus("Waiting for pod IP address to be available")
+            event.defer()
+            return
         config_file_changed = self._apply_ausf_config()
         self._configure_ausf_service(force_restart=config_file_changed)
         self.unit.status = ActiveStatus()
@@ -83,7 +89,7 @@ class AUSFOperatorCharm(CharmBase):
         """
         content = self._render_config_file(
             ausf_group_id=AUSF_GROUP_ID,
-            ausf_ip=self._pod_ip,
+            ausf_ip=_get_pod_ip(),  # type: ignore[arg-type]
             nrf_url=self._nrf_requires.nrf_url,
             sbi_port=SBI_PORT,
         )
@@ -210,20 +216,9 @@ class AUSFOperatorCharm(CharmBase):
             "GRPC_GO_LOG_SEVERITY_LEVEL": "info",
             "GRPC_TRACE": "all",
             "GRPC_VERBOSITY": "DEBUG",
-            "POD_IP": self._pod_ip,
+            "POD_IP": _get_pod_ip(),
             "MANAGED_BY_CONFIG_POD": "true",
         }
-
-    @property
-    def _pod_ip(
-        self,
-    ) -> str:
-        """Return the pod IP using juju client.
-
-        Returns:
-            str: The pod IP.
-        """
-        return str(IPv4Address(check_output(["unit-get", "private-address"]).decode().strip()))
 
     @property
     def _nrf_data_is_available(self) -> bool:
@@ -233,6 +228,16 @@ class AUSFOperatorCharm(CharmBase):
             bool: Whether the NRF data is available.
         """
         return bool(self._nrf_requires.nrf_url)
+
+
+def _get_pod_ip() -> Optional[str]:
+    """Returns the pod IP using juju client.
+
+    Returns:
+        str: The pod IP.
+    """
+    ip_address = check_output(["unit-get", "private-address"])
+    return str(IPv4Address(ip_address.decode().strip())) if ip_address else None
 
 
 if __name__ == "__main__":  # pragma: no cover

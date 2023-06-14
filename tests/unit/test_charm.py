@@ -188,6 +188,28 @@ class TestCharm(unittest.TestCase):
             ActiveStatus(),
         )
 
+    @patch("charm.check_output")
+    def test_ip_not_available_when_pebble_ready_then_status_is_waiting(
+        self,
+        patch_check_output,
+    ):
+        config_dir = tempfile.TemporaryDirectory()
+        container = self.container.replace(
+            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+        )
+        state_in = State(
+            containers=[container],
+            relations=[self.nrf_relation],
+        )
+        patch_check_output.return_value = "".encode()
+
+        state_out = self.ctx.run(container.pebble_ready_event, state_in)
+
+        self.assertEqual(
+            state_out.status.unit,
+            WaitingStatus("Waiting for pod IP address to be available"),
+        )
+
     @patch("ops.model.Container.restart")
     @patch("charm.check_output")
     def test_relations_available_and_config_pushed_and_pebble_updated_when_pebble_ready_then_service_is_restarted(  # noqa: E501

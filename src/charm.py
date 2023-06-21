@@ -153,7 +153,7 @@ class AUSFOperatorCharm(CharmBase):
         self._store_certificate(event.certificate)
         self._configure_ausf(event)
 
-    def _on_certificate_expiring(self, event: CertificateExpiringEvent) -> None:
+    def _on_certificate_expiring(self, event: CertificateExpiringEvent):
         """Requests new certificate."""
         if not self._container.can_connect():
             event.defer()
@@ -179,21 +179,21 @@ class AUSFOperatorCharm(CharmBase):
         self._store_csr(csr)
         self._certificates.request_certificate_creation(certificate_signing_request=csr)
 
-    def _delete_private_key(self) -> None:
+    def _delete_private_key(self):
         """Removes private key from workload."""
         if not self._private_key_is_stored():
             return
         self._container.remove_path(path=f"{CERTS_DIR_PATH}/{PRIVATE_KEY_NAME}")
         logger.info("Removed private key from workload")
 
-    def _delete_csr(self) -> None:
+    def _delete_csr(self):
         """Deletes CSR from workload."""
         if not self._csr_is_stored():
             return
         self._container.remove_path(path=f"{CERTS_DIR_PATH}/{CSR_NAME}")
         logger.info("Removed CSR from workload")
 
-    def _delete_certificate(self) -> None:
+    def _delete_certificate(self):
         """Deletes certificate from workload."""
         if not self._certificate_is_stored():
             return
@@ -363,7 +363,7 @@ class AUSFOperatorCharm(CharmBase):
                     self._service_name: {
                         "override": "replace",
                         "startup": "enabled",
-                        "command": f"/bin/ausf --ausfcfg {CONFIG_DIR}/{CONFIG_FILE_NAME}",  # noqa: E501
+                        "command": f"/free5gc/ausf/ausf --ausfcfg {CONFIG_DIR}/{CONFIG_FILE_NAME}",  # noqa: E501
                         "environment": self._ausf_environment_variables,
                     },
                 },

@@ -11,6 +11,8 @@ containers:
     mounts:
       - storage: config
         location: /free5gc/config
+      - storage: certs
+        location: /free5gc/support/TLS
 
 resources:
   ausf-image:
@@ -22,6 +24,9 @@ storage:
   config:
     type: filesystem
     minimum-size: 1M
+  certs:
+    type: filesystem
+    minimum-size: 1M
 
 assumes:
   - k8s-api
@@ -29,3 +34,5 @@ assumes:
 requires:
   fiveg_nrf:
     interface: fiveg_nrf
+  certificates:
+    interface: tls-certificates

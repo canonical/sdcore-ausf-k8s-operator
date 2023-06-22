@@ -153,7 +153,7 @@ class AUSFOperatorCharm(CharmBase):
         self._store_certificate(event.certificate)
         self._configure_ausf(event)
 
-    def _on_certificate_expiring(self, event: CertificateExpiringEvent):
+    def _on_certificate_expiring(self, event: CertificateExpiringEvent) -> None:
         """Requests new certificate."""
         if not self._container.can_connect():
             event.defer()

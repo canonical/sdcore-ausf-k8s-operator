@@ -186,7 +186,7 @@ class AUSFOperatorCharm(CharmBase):
         self._container.remove_path(path=f"{CERTS_DIR_PATH}/{PRIVATE_KEY_NAME}")
         logger.info("Removed private key from workload")
 
-    def _delete_csr(self):
+    def _delete_csr(self) -> None:
         """Deletes CSR from workload."""
         if not self._csr_is_stored():
             return

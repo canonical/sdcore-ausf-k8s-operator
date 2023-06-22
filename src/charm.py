@@ -179,7 +179,7 @@ class AUSFOperatorCharm(CharmBase):
         self._store_csr(csr)
         self._certificates.request_certificate_creation(certificate_signing_request=csr)
 
-    def _delete_private_key(self):
+    def _delete_private_key(self) -> None:
         """Removes private key from workload."""
         if not self._private_key_is_stored():
             return

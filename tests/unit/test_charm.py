@@ -362,7 +362,7 @@ class TestCharm(unittest.TestCase):
     ):
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/free5gc/support/TLS", cert_dir.name)},
+            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
         )
         private_key = b"private key content"
         patch_generate_private_key.return_value = private_key
@@ -394,9 +394,9 @@ class TestCharm(unittest.TestCase):
 
         self.ctx.run(self.tls_relation.broken_event, state_in)
 
-        patch_remove_path.assert_any_call(path="/free5gc/support/TLS/ausf.pem")
-        patch_remove_path.assert_any_call(path="/free5gc/support/TLS/ausf.key")
-        patch_remove_path.assert_any_call(path="/free5gc/support/TLS/ausf.csr")
+        patch_remove_path.assert_any_call(path="/support/TLS/ausf.pem")
+        patch_remove_path.assert_any_call(path="/support/TLS/ausf.key")
+        patch_remove_path.assert_any_call(path="/support/TLS/ausf.csr")
 
     @patch(
         "charms.tls_certificates_interface.v2.tls_certificates.TLSCertificatesRequiresV2.request_certificate_creation",  # noqa: E501
@@ -408,7 +408,7 @@ class TestCharm(unittest.TestCase):
     ):
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/free5gc/support/TLS", cert_dir.name)},
+            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
         )
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna let you down")
@@ -437,7 +437,7 @@ class TestCharm(unittest.TestCase):
     ):
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/free5gc/support/TLS", cert_dir.name)},
+            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
         )
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna run around and desert you")
@@ -461,7 +461,7 @@ class TestCharm(unittest.TestCase):
         csr = "never gonna make you cry"
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/free5gc/support/TLS", cert_dir.name)},
+            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
         )
         with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
             ausf_csr_file.write(csr)
@@ -505,7 +505,7 @@ class TestCharm(unittest.TestCase):
         stored_csr = "never gonna say goodbye"
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/free5gc/support/TLS", cert_dir.name)},
+            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
         )
         with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
             ausf_csr_file.write(stored_csr)

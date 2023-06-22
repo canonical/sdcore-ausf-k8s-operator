@@ -196,7 +196,7 @@ class AUSFOperatorCharm(CharmBase):
                     self._service_name: {
                         "override": "replace",
                         "startup": "enabled",
-                        "command": f"/free5gc/ausf/ausf --ausfcfg {CONFIG_DIR}/{CONFIG_FILE_NAME}",  # noqa: E501
+                        "command": f"/bin/ausf --ausfcfg {CONFIG_DIR}/{CONFIG_FILE_NAME}",  # noqa: E501
                         "environment": self._ausf_environment_variables,
                     },
                 },

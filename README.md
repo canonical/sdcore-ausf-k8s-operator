@@ -22,4 +22,4 @@ juju deploy sdcore-ausf --trust --channel=edge
 
 ## Image
 
-- **ausf**: `omecproject/5gc-ausf:master-c84dff4`
+- **ausf**: `ghcr.io/canonical/sdcore-ausf:1.3`

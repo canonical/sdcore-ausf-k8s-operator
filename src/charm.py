@@ -193,7 +193,7 @@ class AUSFOperatorCharm(CharmBase):
         self._container.remove_path(path=f"{CERTS_DIR_PATH}/{CSR_NAME}")
         logger.info("Removed CSR from workload")
 
-    def _delete_certificate(self):
+    def _delete_certificate(self) -> None:
         """Deletes certificate from workload."""
         if not self._certificate_is_stored():
             return

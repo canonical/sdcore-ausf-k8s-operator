@@ -161,7 +161,7 @@ class TestCharm(unittest.TestCase):
                 "ausf": {
                     "startup": "enabled",
                     "override": "replace",
-                    "command": "/free5gc/ausf/ausf --ausfcfg /free5gc/config/ausfcfg.conf",
+                    "command": "/bin/ausf --ausfcfg /free5gc/config/ausfcfg.conf",
                     "environment": {
                         "GOTRACEBACK": "crash",
                         "GRPC_GO_LOG_VERBOSITY_LEVEL": "99",

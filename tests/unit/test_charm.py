@@ -371,9 +371,7 @@ class TestCharm(unittest.TestCase):
 
         self.ctx.run(self.tls_relation.created_event, state_in)
 
-        patch_push.assert_called_with(
-            path="/free5gc/support/TLS/ausf.key", source=private_key.decode()
-        )
+        patch_push.assert_called_with(path="/support/TLS/ausf.key", source=private_key.decode())
 
     @patch("charm.check_output")
     @patch("ops.model.Container.remove_path")
@@ -391,9 +389,9 @@ class TestCharm(unittest.TestCase):
 
         self.ctx.run(self.tls_relation.broken_event, state_in)
 
-        patch_remove_path.assert_any_call(path="/free5gc/support/TLS/ausf.pem")
-        patch_remove_path.assert_any_call(path="/free5gc/support/TLS/ausf.key")
-        patch_remove_path.assert_any_call(path="/free5gc/support/TLS/ausf.csr")
+        patch_remove_path.assert_any_call(path="/support/TLS/ausf.pem")
+        patch_remove_path.assert_any_call(path="/support/TLS/ausf.key")
+        patch_remove_path.assert_any_call(path="/support/TLS/ausf.csr")
 
     @patch(
         "charms.tls_certificates_interface.v2.tls_certificates.TLSCertificatesRequiresV2.request_certificate_creation",  # noqa: E501
@@ -418,7 +416,7 @@ class TestCharm(unittest.TestCase):
         )
         self.ctx.run(self.tls_relation.joined_event, state_in)
 
-        patch_push.assert_called_with(path="/free5gc/support/TLS/ausf.csr", source=csr.decode())
+        patch_push.assert_called_with(path="/support/TLS/ausf.csr", source=csr.decode())
 
     @patch(
         "charms.tls_certificates_interface.v2.tls_certificates.TLSCertificatesRequiresV2.request_certificate_creation",  # noqa: E501
@@ -491,7 +489,7 @@ class TestCharm(unittest.TestCase):
 
         self.ctx.run(tls_relation.changed_event, state_in)
 
-        patch_push.assert_any_call(path="/free5gc/support/TLS/ausf.pem", source=certificate)
+        patch_push.assert_any_call(path="/support/TLS/ausf.pem", source=certificate)
 
     @patch("ops.model.Container.pull")
     @patch("ops.model.Container.exists")

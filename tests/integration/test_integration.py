@@ -17,6 +17,7 @@ APP_NAME = METADATA["name"]
 
 DB_APPLICATION_NAME = "mongodb-k8s"
 NRF_APPLICATION_NAME = "sdcore-nrf"
+TLS_PROVIDER_NAME = "self-signed-certificates"
 
 
 async def _deploy_mongodb(ops_test):
@@ -41,13 +42,23 @@ async def _deploy_sdcore_nrf_operator(ops_test):
     )
 
 
+async def _deploy_tls_provider(ops_test):
+    await ops_test.model.deploy(
+        TLS_PROVIDER_NAME,
+        application_name=TLS_PROVIDER_NAME,
+        channel="edge",
+    )
+
+
 @pytest.fixture(scope="module")
 @pytest.mark.abort_on_fail
 async def build_and_deploy(ops_test):
     """Build the charm-under-test and deploy it."""
     deploy_nrf = asyncio.create_task(_deploy_sdcore_nrf_operator(ops_test))
+    deploy_tls_provider = asyncio.create_task(_deploy_tls_provider(ops_test))
     charm = await ops_test.build_charm(".")
     await deploy_nrf
+    await deploy_tls_provider
     resources = {
         "ausf-image": METADATA["resources"]["ausf-image"]["upstream-source"],
     }
@@ -65,6 +76,7 @@ async def test_relate_and_wait_for_active_status(
     build_and_deploy,
 ):
     await ops_test.model.add_relation(relation1=APP_NAME, relation2=NRF_APPLICATION_NAME)
+    await ops_test.model.add_relation(relation1=APP_NAME, relation2=TLS_PROVIDER_NAME)
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME],
         status="active",

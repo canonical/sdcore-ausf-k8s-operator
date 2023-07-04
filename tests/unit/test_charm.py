@@ -39,7 +39,7 @@ class TestCharm(unittest.TestCase):
         state_out = self.ctx.run(self.container.pebble_ready_event, state_in)
 
         self.assertEqual(
-            state_out.status.unit,
+            state_out.unit_status,
             BlockedStatus("Waiting for fiveg_nrf relation"),
         )
 
@@ -56,7 +56,7 @@ class TestCharm(unittest.TestCase):
         state_out = self.ctx.run(self.container.pebble_ready_event, state_in)
 
         self.assertEqual(
-            state_out.status.unit,
+            state_out.unit_status,
             WaitingStatus("Waiting for NRF data to be available"),
         )
         self.assertEqual(
@@ -76,7 +76,7 @@ class TestCharm(unittest.TestCase):
         state_out = self.ctx.run(self.container.pebble_ready_event, state_in)
 
         self.assertEqual(
-            state_out.status.unit,
+            state_out.unit_status,
             WaitingStatus("Waiting for storage to be attached"),
         )
         self.assertEqual(
@@ -196,7 +196,7 @@ class TestCharm(unittest.TestCase):
         state_out = self.ctx.run(container.pebble_ready_event, state_in)
 
         self.assertEqual(
-            state_out.status.unit,
+            state_out.unit_status,
             ActiveStatus(),
         )
 
@@ -219,7 +219,7 @@ class TestCharm(unittest.TestCase):
         state_out = self.ctx.run(container.pebble_ready_event, state_in)
 
         self.assertEqual(
-            state_out.status.unit,
+            state_out.unit_status,
             WaitingStatus("Waiting for pod IP address to be available"),
         )
 
@@ -348,7 +348,7 @@ class TestCharm(unittest.TestCase):
         state_out = self.ctx.run(self.nrf_relation.changed_event, state_in)
 
         self.assertEqual(
-            state_out.status.unit,
+            state_out.unit_status,
             WaitingStatus("Waiting for container to start"),
         )
         self.assertEqual(

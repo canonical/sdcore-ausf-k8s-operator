@@ -43,6 +43,29 @@ class TestCharm(unittest.TestCase):
             BlockedStatus("Waiting for fiveg_nrf relation"),
         )
 
+    @patch("charm.check_output")
+    def test_given_ausf_charm_in_active_status_when_nrf_relation_breaks_then_status_is_blocked(
+        self, patch_check_output
+    ):
+        config_dir = tempfile.TemporaryDirectory()
+        container = self.container.replace(
+            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+        )
+        state_in = State(
+            leader=True,
+            containers=[container],
+            relations=[self.nrf_relation],
+            unit_status=ActiveStatus(),
+        )
+        patch_check_output.return_value = "1.1.1.1".encode()
+
+        state_out = self.ctx.run(self.nrf_relation.broken_event, state_in)
+
+        self.assertEqual(
+            state_out.unit_status,
+            BlockedStatus("Waiting for fiveg_nrf relation"),
+        )
+
     def test_given_nrf_data_not_available_when_pebble_ready_then_status_is_waiting(
         self,
     ):

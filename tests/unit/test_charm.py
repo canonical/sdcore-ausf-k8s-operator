@@ -299,7 +299,7 @@ class TestCharm(unittest.TestCase):
             mounts={
                 "config_dir": Mount(
                     "/free5gc/config/ausfcfg.conf",
-                    Path(__file__).parent / "expected_config" / "config.conf",
+                    Path(__file__).parent / "actual_config" / "config.conf",
                 )
             },
             layers={"ausf": applied_plan},

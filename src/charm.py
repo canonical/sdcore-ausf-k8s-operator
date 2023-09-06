@@ -311,7 +311,7 @@ class AUSFOperatorCharm(CharmBase):
         f"{CONFIG_DIR}/{CONFIG_FILE_NAME}"
         try:
             existing_content = self._container.pull(path=f"{CONFIG_DIR}/{CONFIG_FILE_NAME}")
-            return existing_content.read() == content
+            return existing_content.read().strip() == content.strip()
         except PathError:
             return False
 

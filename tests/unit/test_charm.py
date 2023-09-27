@@ -43,6 +43,22 @@ class TestCharm(unittest.TestCase):
             BlockedStatus("Waiting for fiveg_nrf relation"),
         )
 
+    def test_given_certificates_relation_not_created_when_pebble_ready_then_status_is_blocked(
+        self,
+    ):
+        state_in = State(
+            leader=True,
+            containers=[self.container],
+            relations=[self.nrf_relation],
+        )
+
+        state_out = self.ctx.run(self.container.pebble_ready_event, state_in)
+
+        self.assertEqual(
+            state_out.unit_status,
+            BlockedStatus("Waiting for certificates relation"),
+        )
+
     @patch("charm.check_output")
     def test_given_ausf_charm_in_active_status_when_nrf_relation_breaks_then_status_is_blocked(
         self, patch_check_output

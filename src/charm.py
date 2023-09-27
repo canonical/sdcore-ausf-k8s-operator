@@ -94,9 +94,10 @@ class AUSFOperatorCharm(CharmBase):
             self.unit.status = WaitingStatus("Waiting for container to start")
             event.defer()
             return
-        if not self._relation_created("fiveg_nrf"):
-            self.unit.status = BlockedStatus("Waiting for fiveg_nrf relation")
-            return
+        for relation in ["fiveg_nrf", "certificates"]:
+            if not self._relation_created(relation):
+                self.unit.status = BlockedStatus(f"Waiting for {relation} relation")
+                return
         if not self._nrf_data_is_available:
             self.unit.status = WaitingStatus("Waiting for NRF data to be available")
             event.defer()
@@ -107,6 +108,10 @@ class AUSFOperatorCharm(CharmBase):
             return
         if not _get_pod_ip():
             self.unit.status = WaitingStatus("Waiting for pod IP address to be available")
+            event.defer()
+            return
+        if not self._certificate_is_stored():
+            self.unit.status = WaitingStatus("Waiting for certificates to be stored")
             event.defer()
             return
         config_file_changed = self._apply_ausf_config()
@@ -128,7 +133,7 @@ class AUSFOperatorCharm(CharmBase):
         self._delete_private_key()
         self._delete_csr()
         self._delete_certificate()
-        self._configure_ausf(event)
+        self.unit.status = BlockedStatus("Waiting for certificates relation")
 
     def _on_certificates_relation_joined(self, event: EventBase) -> None:
         """Generates CSR and requests new certificate."""
@@ -264,7 +269,7 @@ class AUSFOperatorCharm(CharmBase):
             ausf_ip=_get_pod_ip(),  # type: ignore[arg-type]
             nrf_url=self._nrf_requires.nrf_url,
             sbi_port=SBI_PORT,
-            scheme="https" if self._certificate_is_stored() else "http",
+            scheme="https",
         )
         if not self._config_file_content_matches(content):
             self._push_config_file(

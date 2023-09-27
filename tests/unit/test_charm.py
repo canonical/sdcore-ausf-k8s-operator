@@ -66,6 +66,29 @@ class TestCharm(unittest.TestCase):
             BlockedStatus("Waiting for fiveg_nrf relation"),
         )
 
+    @patch("charm.check_output")
+    def test_given_ausf_charm_in_active_status_when_certificates_relation_breaks_then_status_is_blocked(  # noqa: E501
+        self, patch_check_output
+    ):
+        config_dir = tempfile.TemporaryDirectory()
+        container = self.container.replace(
+            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+        )
+        state_in = State(
+            leader=True,
+            containers=[container],
+            relations=[self.nrf_relation, self.tls_relation],
+            unit_status=ActiveStatus(),
+        )
+        patch_check_output.return_value = "1.1.1.1".encode()
+
+        state_out = self.ctx.run(self.tls_relation.broken_event, state_in)
+
+        self.assertEqual(
+            state_out.unit_status,
+            BlockedStatus("Waiting for certificates relation"),
+        )
+
     def test_given_nrf_data_not_available_when_pebble_ready_then_status_is_waiting(
         self,
     ):
@@ -73,7 +96,7 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[self.container],
-            relations=[nrf_relation],
+            relations=[nrf_relation, self.tls_relation],
         )
 
         state_out = self.ctx.run(self.container.pebble_ready_event, state_in)
@@ -93,7 +116,7 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[self.container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
         )
 
         state_out = self.ctx.run(self.container.pebble_ready_event, state_in)
@@ -108,7 +131,7 @@ class TestCharm(unittest.TestCase):
         )
 
     @patch("charm.check_output")
-    def test_given_relations_created_and_nrf_data_available_when_pebble_ready_then_config_file_rendered_and_pushed(  # noqa: E501
+    def test_given_relation_created_and_nrf_data_available_and_certificates_not_stored_when_pebble_ready_then_status_is_waiting(  # noqa: E501
         self,
         patch_check_output,
     ):
@@ -119,9 +142,39 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
+        )
+
+        patch_check_output.return_value = b"1.1.1.1"
+        state_out = self.ctx.run(self.container.pebble_ready_event, state_in)
+
+        self.assertEqual(
+            state_out.unit_status,
+            WaitingStatus("Waiting for certificates to be stored"),
+        )
+        self.assertEqual(
+            state_out.deferred[0].name,
+            "ausf_pebble_ready",
+        )
+
+    @patch("ops.model.Container.exists")
+    @patch("charm.check_output")
+    def test_given_relations_created_and_nrf_data_available_and_certificate_stored_when_pebble_ready_then_config_file_rendered_and_pushed(  # noqa: E501
+        self,
+        patch_check_output,
+        patch_exists,
+    ):
+        config_dir = tempfile.TemporaryDirectory()
+        container = self.container.replace(
+            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+        )
+        state_in = State(
+            leader=True,
+            containers=[container],
+            relations=[self.nrf_relation, self.tls_relation],
         )
         patch_check_output.return_value = b"1.1.1.1"
+        patch_exists.return_value = True
 
         self.ctx.run(container.pebble_ready_event, state_in)
 
@@ -133,10 +186,12 @@ class TestCharm(unittest.TestCase):
             expected_content = expected.read().strip()
             self.assertEqual(actual_content, expected_content)
 
+    @patch("ops.model.Container.exists")
     @patch("charm.check_output")
     def test_config_pushed_but_content_changed_when_pebble_ready_then_new_config_content_is_pushed(  # noqa: E501
         self,
         patch_check_output,
+        patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
@@ -145,9 +200,10 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
         )
         patch_check_output.return_value = "1.1.1.1".encode()
+        patch_exists.return_value = True
         with open(Path(config_dir.name) / "ausfcfg.conf", "w") as existing_config:
             existing_config.write("never gonna give you up")
 
@@ -161,10 +217,12 @@ class TestCharm(unittest.TestCase):
             expected_content = expected.read().strip()
             self.assertEqual(actual_content, expected_content)
 
+    @patch("ops.model.Container.exists")
     @patch("charm.check_output")
     def test_given_relation_available_and_config_pushed_when_pebble_ready_then_pebble_layer_is_added_correctly(  # noqa: E501
         self,
         patch_check_output,
+        patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
@@ -173,9 +231,10 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
         )
         patch_check_output.return_value = "1.1.1.1".encode()
+        patch_exists.return_value = True
 
         state_out = self.ctx.run(container.pebble_ready_event, state_in)
 
@@ -200,10 +259,12 @@ class TestCharm(unittest.TestCase):
         updated_plan = state_out.containers[0].layers["ausf"]
         self.assertEqual(expected_plan, updated_plan)
 
+    @patch("ops.model.Container.exists")
     @patch("charm.check_output")
     def test_relations_available_and_config_pushed_and_pebble_updated_when_pebble_ready_then_status_is_active(  # noqa: E501
         self,
         patch_check_output,
+        patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
@@ -212,9 +273,10 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
         )
         patch_check_output.return_value = "1.1.1.1".encode()
+        patch_exists.return_value = True
 
         state_out = self.ctx.run(container.pebble_ready_event, state_in)
 
@@ -235,7 +297,7 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
         )
         patch_check_output.return_value = "".encode()
 
@@ -246,12 +308,14 @@ class TestCharm(unittest.TestCase):
             WaitingStatus("Waiting for pod IP address to be available"),
         )
 
+    @patch("ops.model.Container.exists")
     @patch("ops.model.Container.restart")
     @patch("charm.check_output")
     def test_relations_available_and_config_pushed_and_pebble_updated_when_pebble_ready_then_service_is_restarted(  # noqa: E501
         self,
         patch_check_output,
         patch_restart,
+        patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
@@ -260,9 +324,10 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
         )
         patch_check_output.return_value = "1.1.1.1".encode()
+        patch_exists.return_value = True
 
         self.ctx.run(container.pebble_ready_event, state_in)
 
@@ -315,12 +380,14 @@ class TestCharm(unittest.TestCase):
 
         patch_restart.assert_not_called()
 
+    @patch("ops.model.Container.exists")
     @patch("ops.model.Container.restart")
     @patch("charm.check_output")
     def test_config_pushed_but_content_changed_and_layer_already_applied_when_pebble_ready_then_ausf_service_is_restarted(  # noqa: E501
         self,
         patch_check_output,
         patch_restart,
+        patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
         applied_plan = Layer(
@@ -350,9 +417,10 @@ class TestCharm(unittest.TestCase):
         state_in = State(
             leader=True,
             containers=[container],
-            relations=[self.nrf_relation],
+            relations=[self.nrf_relation, self.tls_relation],
         )
         patch_check_output.return_value = "1.1.1.1".encode()
+        patch_exists.return_value = True
 
         self.ctx.run(container.pebble_ready_event, state_in)
 

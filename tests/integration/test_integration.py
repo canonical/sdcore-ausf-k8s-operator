@@ -41,6 +41,8 @@ async def _deploy_sdcore_nrf_operator(ops_test: OpsTest):
     await ops_test.model.add_relation(  # type: ignore[union-attr]
         relation1=DB_APPLICATION_NAME, relation2=NRF_APPLICATION_NAME
     )
+    await ops_test.model.add_relation(  # type: ignore[union-attr]
+        relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
 
 
 async def _deploy_tls_provider(ops_test: OpsTest):
@@ -58,8 +60,8 @@ async def build_and_deploy(ops_test: OpsTest):
     deploy_nrf = asyncio.create_task(_deploy_sdcore_nrf_operator(ops_test))
     deploy_tls_provider = asyncio.create_task(_deploy_tls_provider(ops_test))
     charm = await ops_test.build_charm(".")
-    await deploy_nrf
     await deploy_tls_provider
+    await deploy_nrf
     resources = {
         "ausf-image": METADATA["resources"]["ausf-image"]["upstream-source"],
     }
@@ -99,6 +101,7 @@ async def test_restore_nrf_and_wait_for_active_status(ops_test: OpsTest, build_a
     await ops_test.model.add_relation(  # type: ignore[union-attr]
         relation1=f"{NRF_APPLICATION_NAME}:database", relation2=DB_APPLICATION_NAME
     )
+    await ops_test.model.add_relation(relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)  # type: ignore[union-attr]  # noqa: E501
     await ops_test.model.add_relation(relation1=APP_NAME, relation2=NRF_APPLICATION_NAME)  # type: ignore[union-attr]  # noqa: E501
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)  # type: ignore[union-attr]  # noqa: E501
 

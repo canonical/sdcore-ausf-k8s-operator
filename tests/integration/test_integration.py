@@ -42,7 +42,8 @@ async def _deploy_sdcore_nrf_operator(ops_test: OpsTest):
         relation1=DB_APPLICATION_NAME, relation2=NRF_APPLICATION_NAME
     )
     await ops_test.model.add_relation(  # type: ignore[union-attr]
-        relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
+        relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME
+    )
 
 
 async def _deploy_tls_provider(ops_test: OpsTest):

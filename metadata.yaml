@@ -4,7 +4,7 @@ display-name: SD-Core 5G AUSF
 summary: A Charmed Operator for SD-Core's AUSF component.
 description: |
   A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component.
-website: https://charmhub.io/sdcore-ausf
+website: https://github.com/canonical/sdcore-ausf-operator # Once Charmhub supports the `source` link, this could be changed.
 source: https://github.com/canonical/sdcore-ausf-operator
 issues: https://github.com/canonical/sdcore-ausf-operator/issues
 

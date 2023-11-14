@@ -549,7 +549,7 @@ class TestCharm(unittest.TestCase):
         "charms.tls_certificates_interface.v2.tls_certificates.TLSCertificatesRequiresV2.request_certificate_creation",  # noqa: E501
     )
     @patch("charm.generate_csr")
-    def test_given_private_key_exists_when_on_certificates_relation_joined_then_cert_is_requested(
+    def test_given_private_key_exists_and_certificate_not_yet_requested_when_on_certificates_relation_joined_then_cert_is_requested(  # noqa: E501
         self,
         patch_generate_csr,
         patch_request_certificate_creation,
@@ -571,6 +571,36 @@ class TestCharm(unittest.TestCase):
         self.ctx.run(self.tls_relation.joined_event, state_in)
 
         patch_request_certificate_creation.assert_called_with(certificate_signing_request=csr)
+
+    @patch(
+        "charms.tls_certificates_interface.v2.tls_certificates.TLSCertificatesRequiresV2.request_certificate_creation",  # noqa: E501
+    )
+    @patch("ops.model.Container.exists")
+    @patch("charm.generate_csr")
+    def test_given_certificate_already_requested_when_on_certificates_relation_joined_then_cert_is_not_requested(  # noqa: E501
+        self,
+        patch_generate_csr,
+        patch_exists,
+        patch_request_certificate_creation,
+    ):
+        cert_dir = tempfile.TemporaryDirectory()
+        container = self.container.replace(
+            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
+        )
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        csr = b"whatever csr content"
+        patch_generate_csr.return_value = csr
+        patch_exists.return_value = True
+        state_in = State(
+            leader=True,
+            containers=[container],
+            relations=[self.nrf_relation, self.tls_relation],
+        )
+
+        self.ctx.run(self.tls_relation.joined_event, state_in)
+
+        patch_request_certificate_creation.assert_not_called()
 
     @patch("charm.check_output")
     def test_given_csr_matches_stored_one_when_certificate_available_then_certificate_is_pushed(

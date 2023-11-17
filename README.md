@@ -1,16 +1,5 @@
-<div align="center">
-  <img src="./icon.svg" alt="ONF Icon" width="200" height="200">
-</div>
-<br/>
-<div align="center">
-  <a href="https://charmhub.io/sdcore-ausf"><img src="https://charmhub.io/sdcore-ausf/badge.svg" alt="CharmHub Badge"></a>
-  <a href="https://github.com/canonical/sdcore-ausf-operator/actions/workflows/publish-charm.yaml">
-    <img src="https://github.com/canonical/sdcore-ausf-operator/actions/workflows/publish-charm.yaml/badge.svg?branch=main" alt=".github/workflows/publish-charm.yaml">
-  </a>
-  <br/>
-  <br/>
-  <h1>SD-Core AUSF Operator</h1>
-</div>
+# SD-Core AUSF Operator (k8s)
+[![CharmHub Badge](https://charmhub.io/sdcore-ausf/badge.svg)](https://charmhub.io/sdcore-ausf)
 
 A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component. 
 

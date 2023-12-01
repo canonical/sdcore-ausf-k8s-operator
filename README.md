@@ -6,8 +6,8 @@ A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component
 ## Usage
 
 ```bash
-juju deploy sdcore-ausf --trust --channel=edge
-juju deploy sdcore-nrf --trust --channel=edge
+juju deploy sdcore-ausf --channel=edge
+juju deploy sdcore-nrf --channel=edge
 juju deploy mongodb-k8s --trust --channel=5/edge
 juju deploy self-signed-certificates --channel=beta
 juju integrate sdcore-nrf:database mongodb-k8s

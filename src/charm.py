@@ -9,9 +9,6 @@ from ipaddress import IPv4Address
 from subprocess import check_output
 from typing import Optional
 
-from charms.observability_libs.v1.kubernetes_service_patch import (  # type: ignore[import]
-    KubernetesServicePatch,
-)
 from charms.sdcore_nrf.v0.fiveg_nrf import NRFRequires  # type: ignore[import]
 from charms.tls_certificates_interface.v2.tls_certificates import (  # type: ignore[import]
     CertificateAvailableEvent,
@@ -21,7 +18,6 @@ from charms.tls_certificates_interface.v2.tls_certificates import (  # type: ign
     generate_private_key,
 )
 from jinja2 import Environment, FileSystemLoader
-from lightkube.models.core_v1 import ServicePort
 from ops.charm import CharmBase, EventBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
@@ -58,12 +54,7 @@ class AUSFOperatorCharm(CharmBase):
         self._container_name = self._service_name = "ausf"
         self._container = self.unit.get_container(self._container_name)
         self._nrf_requires = NRFRequires(charm=self, relation_name="fiveg_nrf")
-        self._service_patcher = KubernetesServicePatch(
-            charm=self,
-            ports=[
-                ServicePort(name="sbi", port=SBI_PORT),
-            ],
-        )
+        self.unit.set_ports(SBI_PORT)
         self._certificates = TLSCertificatesRequiresV2(self, "certificates")
 
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)

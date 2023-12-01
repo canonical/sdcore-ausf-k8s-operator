@@ -16,7 +16,6 @@ from scenario import Container, Context, Mount, Relation, State  # type: ignore[
 from charm import AUSFOperatorCharm
 
 
-@patch("charm.KubernetesServicePatch", new=Mock)
 class TestCharm(unittest.TestCase):
     def setUp(self):
         self.ctx = Context(AUSFOperatorCharm)

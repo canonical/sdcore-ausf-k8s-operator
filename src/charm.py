@@ -2,7 +2,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charmed operator for the SD-Core AUSF service."""
+"""Charmed K8s operator for the SD-Core AUSF service."""
 
 import logging
 from ipaddress import IPv4Address
@@ -38,8 +38,8 @@ CERTIFICATE_NAME = "ausf.pem"
 CERTIFICATE_COMMON_NAME = "ausf.sdcore"
 
 
-class AUSFOperatorCharm(CharmBase):
-    """Main class to describe juju event handling for the SD-Core AUSF operator."""
+class AUSFK8sOperatorCharm(CharmBase):
+    """Main class to describe juju event handling for the SD-Core AUSF K8s operator."""
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -422,4 +422,4 @@ def _get_pod_ip() -> Optional[str]:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main(AUSFOperatorCharm)
+    main(AUSFK8sOperatorCharm)

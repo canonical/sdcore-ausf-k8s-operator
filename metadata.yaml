@@ -1,12 +1,12 @@
-name: sdcore-ausf
+name: sdcore-ausf-k8s
 
-display-name: SD-Core 5G AUSF
+display-name: SD-Core 5G AUSF K8s
 summary: A Charmed Operator for SD-Core's AUSF component.
 description: |
   A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component.
-website: https://github.com/canonical/sdcore-ausf-operator # Once Charmhub supports the `source` link, this could be changed.
-source: https://github.com/canonical/sdcore-ausf-operator
-issues: https://github.com/canonical/sdcore-ausf-operator/issues
+website: https://charmhub.io/sdcore-ausf-k8s
+source: https://github.com/canonical/sdcore-ausf-k8s-operator
+issues: https://github.com/canonical/sdcore-ausf-k8s-operator/issues
 
 containers:
   ausf:

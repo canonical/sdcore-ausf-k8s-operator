@@ -19,7 +19,7 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 
 DB_APPLICATION_NAME = "mongodb-k8s"
-NRF_APPLICATION_NAME = "sdcore-nrf"
+NRF_APPLICATION_NAME = "sdcore-nrf-k8s"
 TLS_PROVIDER_NAME = "self-signed-certificates"
 
 

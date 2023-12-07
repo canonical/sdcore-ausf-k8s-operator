@@ -1,4 +1,4 @@
-# SD-Core AUSF Operator for K8s
+# SD-Core AUSF Operator (k8s)
 [![CharmHub Badge](https://charmhub.io/sdcore-ausf-k8s/badge.svg)](https://charmhub.io/sdcore-ausf-k8s)
 
 A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component for K8s. 

@@ -19,4 +19,3 @@ juju integrate sdcore-ausf-k8s:certificates self-signed-certificates:certificate
 ## Image
 
 - **ausf**: `ghcr.io/canonical/sdcore-ausf:1.3`
-

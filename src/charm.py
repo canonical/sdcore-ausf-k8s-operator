@@ -386,7 +386,7 @@ class AUSFOperatorCharm(CharmBase):
 
     @property
     def _ausf_environment_variables(self) -> dict:
-        """Return environment variables for the ausf container.
+        """Return environment variables for the AUSF container.
 
         Returns:
             dict: Environment variables.

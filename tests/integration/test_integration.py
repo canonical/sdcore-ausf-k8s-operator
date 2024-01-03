@@ -27,7 +27,7 @@ async def _deploy_mongodb(ops_test: OpsTest):
     await ops_test.model.deploy(  # type: ignore[union-attr]
         DB_APPLICATION_NAME,
         application_name=DB_APPLICATION_NAME,
-        channel="5/edge",
+        channel="6/beta",
         trust=True,
     )
 

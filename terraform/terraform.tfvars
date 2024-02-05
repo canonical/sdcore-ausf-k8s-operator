@@ -4,4 +4,4 @@ certs_application_name = "put your self-signed-certificates app name here"
 nrf_application_name   = "put your nrf app name here"
 
 # Optional Configuration
-channel = "put the charm channel here"
+# channel = "put the charm channel here"

@@ -120,10 +120,6 @@ class TestCharm(unittest.TestCase):
             state_out.unit_status,
             WaitingStatus("Waiting for NRF data to be available"),
         )
-        self.assertEqual(
-            state_out.deferred[0].name,
-            "ausf_pebble_ready",
-        )
 
     def test_given_relation_created_and_nrf_data_available_and_storage_not_attached_when_pebble_ready_then_status_is_waiting(  # noqa: E501
         self,
@@ -140,19 +136,27 @@ class TestCharm(unittest.TestCase):
             state_out.unit_status,
             WaitingStatus("Waiting for storage to be attached"),
         )
-        self.assertEqual(
-            state_out.deferred[0].name,
-            "ausf_pebble_ready",
-        )
 
+    @patch("charm.generate_csr")
+    @patch("charm.generate_private_key")
     @patch("charm.check_output")
     def test_given_relation_created_and_nrf_data_available_and_certificates_not_stored_when_pebble_ready_then_status_is_waiting(  # noqa: E501
         self,
         patch_check_output,
+        patch_generate_private_key,
+        patch_generate_csr,
     ):
+        private_key = b"whatever key content"
+        patch_generate_private_key.return_value = private_key
+        csr = b"whatever csr content"
+        patch_generate_csr.return_value = csr
         config_dir = tempfile.TemporaryDirectory()
+        cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
         state_in = State(
             leader=True,
@@ -166,10 +170,6 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(
             state_out.unit_status,
             WaitingStatus("Waiting for certificates to be stored"),
-        )
-        self.assertEqual(
-            state_out.deferred[0].name,
-            "ausf_pebble_ready",
         )
 
     @patch("ops.model.Container.exists")
@@ -457,28 +457,37 @@ class TestCharm(unittest.TestCase):
             state_out.unit_status,
             WaitingStatus("Waiting for container to start"),
         )
-        self.assertEqual(
-            state_out.deferred[0].name,
-            "nrf_available",
-        )
 
+    @patch(
+        "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.request_certificate_creation",  # noqa: E501
+        new=Mock,
+    )
+    @patch("charm.generate_csr")
+    @patch("charm.check_output")
     @patch("charm.generate_private_key")
     def test_given_can_connect_when_on_certificates_relation_created_then_private_key_is_generated(
-        self, patch_generate_private_key
+        self, patch_generate_private_key, patch_check_output, patch_generate_csr
     ):
+        patch_check_output.return_value = "1.1.1.1".encode()
+        config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
         private_key = b"private key content"
         patch_generate_private_key.return_value = private_key
+        csr = b"whatever csr content"
+        patch_generate_csr.return_value = csr
         state_in = State(
             leader=True,
             containers=[container],
             relations=[self.nrf_relation, self.tls_relation],
         )
 
-        self.ctx.run(self.tls_relation.created_event, state_in)
+        self.ctx.run(self.tls_relation.joined_event, state_in)
 
         with open(Path(cert_dir.name) / "ausf.key") as ausf_key_file:
             actual_content = ausf_key_file.read()
@@ -520,13 +529,21 @@ class TestCharm(unittest.TestCase):
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.request_certificate_creation",  # noqa: E501
         new=Mock,
     )
+    @patch("charm.check_output")
     @patch("charm.generate_csr")
     def test_given_private_key_exists_when_on_certificates_relation_joined_then_csr_is_generated(
-        self, patch_generate_csr
+        self,
+        patch_generate_csr,
+        patch_check_output,
     ):
+        patch_check_output.return_value = "1.1.1.1".encode()
+        config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna let you down")
@@ -544,6 +561,7 @@ class TestCharm(unittest.TestCase):
             actual_content = ausf_csr_file.read()
             self.assertEqual(actual_content, csr.decode())
 
+    @patch("charm.check_output")
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.request_certificate_creation",  # noqa: E501
     )
@@ -552,10 +570,16 @@ class TestCharm(unittest.TestCase):
         self,
         patch_generate_csr,
         patch_request_certificate_creation,
+        patch_check_output,
     ):
+        patch_check_output.return_value = "1.1.1.1".encode()
+        config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna run around and desert you")
@@ -571,6 +595,7 @@ class TestCharm(unittest.TestCase):
 
         patch_request_certificate_creation.assert_called_with(certificate_signing_request=csr)
 
+    @patch("charm.check_output")
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.request_certificate_creation",  # noqa: E501
     )
@@ -581,10 +606,16 @@ class TestCharm(unittest.TestCase):
         patch_generate_csr,
         patch_exists,
         patch_request_certificate_creation,
+        patch_check_output,
     ):
+        patch_check_output.return_value = "1.1.1.1".encode()
+        config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna run around and desert you")
@@ -607,9 +638,13 @@ class TestCharm(unittest.TestCase):
         patch_check_output,
     ):
         csr = "never gonna make you cry"
+        config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"cert_dir": Mount("/support/TLS", cert_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
         with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
             ausf_csr_file.write(csr)

@@ -11,13 +11,13 @@ rather serve as a building block for higher level modules.
 ## Module structure
 
 - **main.tf** - Defines the Juju application to be deployed.
-- **variables.tf** - Allows customization of the deployment. Except for exposing the deployment
-  options (Juju model name, channel or application name) also models the charm configuration.
+- **variables.tf** - Allows customization of the deployment by exposing the deployment options 
+  (Juju model name, channel or application name).
 - **output.tf** - Responsible for integrating the module with other Terraform modules, primarily
   by defining potential integration endpoints (charm integrations), but also by exposing
   the application name.
 - **terraform.tf** - Defines the Terraform provider.
--
+
 ## Using sdcore-ausf-k8s base module in higher level modules
 
 If you want to use `sdcore-ausf-k8s` base module as part of your Terraform module, import it

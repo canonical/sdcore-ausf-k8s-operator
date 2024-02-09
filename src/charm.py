@@ -97,18 +97,13 @@ class AUSFOperatorCharm(CharmBase):
             return
         if not self._private_key_is_stored():
             self._generate_private_key()
-        if not self._certificate_is_stored():
-            if not self._csr_is_stored():
-                self._request_new_certificate()
-                self.unit.status = WaitingStatus("Waiting for certificates to be stored")
-                return
-            else:
-                provider_certificates = self._certificates.get_assigned_certificates()
-                if provider_certificates:
-                    if not self._certificate_is_stored():
-                        self._store_certificate(certificate=provider_certificates[0].certificate)
+        if not self._csr_is_stored():
+            self._request_new_certificate()
+            self.unit.status = WaitingStatus("Waiting for certificates to be stored")
+            return
+        certificate_changed = self._certificates_updated()
         config_file_changed = self._apply_ausf_config()
-        self._configure_ausf_service(force_restart=config_file_changed)
+        self._configure_ausf_service(force_restart=(config_file_changed or certificate_changed))
         self.unit.status = ActiveStatus()
 
     def _on_certificates_relation_broken(self, event: EventBase) -> None:
@@ -138,6 +133,18 @@ class AUSFOperatorCharm(CharmBase):
             event (NRFBrokenEvent): Juju event
         """
         self.unit.status = BlockedStatus("Waiting for fiveg_nrf relation")
+
+    def _certificates_updated(self) -> bool:
+        csr = self._get_stored_csr()
+        for provider_certificate in self._certificates.get_assigned_certificates():
+            if provider_certificate.csr == csr:
+                existing_certificate = (
+                    self._get_stored_certificate() if self._certificate_is_stored() else ""
+                )
+                if not existing_certificate == provider_certificate.certificate:
+                    self._store_certificate(certificate=provider_certificate.certificate)
+                    return True
+        return False
 
     def _generate_private_key(self) -> None:
         """Generates and stores private key."""

@@ -180,9 +180,19 @@ class TestCharm(unittest.TestCase):
         patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
+        cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna make you cry")
         state_in = State(
             leader=True,
             containers=[container],
@@ -209,9 +219,19 @@ class TestCharm(unittest.TestCase):
         patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
+        cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna make you cry")
         state_in = State(
             leader=True,
             containers=[container],
@@ -240,9 +260,19 @@ class TestCharm(unittest.TestCase):
         patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
+        cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna make you cry")
         state_in = State(
             leader=True,
             containers=[container],
@@ -282,9 +312,19 @@ class TestCharm(unittest.TestCase):
         patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
+        cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna make you cry")
         state_in = State(
             leader=True,
             containers=[container],
@@ -333,9 +373,19 @@ class TestCharm(unittest.TestCase):
         patch_exists,
     ):
         config_dir = tempfile.TemporaryDirectory()
+        cert_dir = tempfile.TemporaryDirectory()
         container = self.container.replace(
-            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
         )
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna make you cry")
         state_in = State(
             leader=True,
             containers=[container],
@@ -425,8 +475,19 @@ class TestCharm(unittest.TestCase):
                 }
             }
         )
+        config_dir = tempfile.TemporaryDirectory()
+        cert_dir = tempfile.TemporaryDirectory()
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna make you cry")
         container = self.container.replace(
-            mounts={"config_dir": Mount("/free5gc/config", config_dir.name)},
+            mounts={
+                "cert_dir": Mount("/support/TLS", cert_dir.name),
+                "config_dir": Mount("/free5gc/config", config_dir.name),
+            },
             layers={"ausf": applied_plan},
         )
         state_in = State(
@@ -611,6 +672,12 @@ class TestCharm(unittest.TestCase):
         patch_check_output.return_value = "1.1.1.1".encode()
         config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna run around and desert you")
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna make you cry")
         container = self.container.replace(
             mounts={
                 "cert_dir": Mount("/support/TLS", cert_dir.name),

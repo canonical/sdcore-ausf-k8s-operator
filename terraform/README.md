@@ -25,7 +25,7 @@ like shown below:
 
 ```text
 module "ausf" {
-  source = "git::https://github.com/canonical/sdcore-ausf-k8s-operator/terraform/modules/terraform-juju-sdcore-ausf-k8s"
+  source = "git::https://github.com/canonical/sdcore-ausf-k8s-operator/terraform"
   
   model_name = "juju_model_name"
   (Customize configuration variables here if needed)

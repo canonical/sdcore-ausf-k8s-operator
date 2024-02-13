@@ -70,7 +70,7 @@ class AUSFOperatorCharm(CharmBase):
             self._certificates.on.certificate_expiring, self._on_certificate_expiring
         )
 
-    def _configure_ausf(  # noqa C901
+    def _configure_ausf(
         self,
         event: EventBase,
     ) -> None:

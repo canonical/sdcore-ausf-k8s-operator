@@ -99,9 +99,15 @@ class AUSFOperatorCharm(CharmBase):
             self._generate_private_key()
         if not self._csr_is_stored():
             self._request_new_certificate()
+        certificate_changed = False
+        provider_certificate = self._get_current_provider_certificate()
+        if provider_certificate:
+            certificate_changed = self._update_certificate(
+                provider_certificate=provider_certificate
+            )
+        else:
             self.unit.status = WaitingStatus("Waiting for certificates to be stored")
             return
-        certificate_changed = self._certificates_updated()
         config_file_changed = self._apply_ausf_config()
         self._configure_ausf_service(force_restart=(config_file_changed or certificate_changed))
         self.unit.status = ActiveStatus()
@@ -134,16 +140,29 @@ class AUSFOperatorCharm(CharmBase):
         """
         self.unit.status = BlockedStatus("Waiting for fiveg_nrf relation")
 
-    def _certificates_updated(self) -> bool:
+    def _get_current_provider_certificate(self) -> str | None:
+        """Compares the current certificate request to what is in the interface.
+
+        Returns The current valid provider certificate if present
+        """
         csr = self._get_stored_csr()
         for provider_certificate in self._certificates.get_assigned_certificates():
             if provider_certificate.csr == csr:
-                existing_certificate = (
-                    self._get_stored_certificate() if self._certificate_is_stored() else ""
-                )
-                if not existing_certificate == provider_certificate.certificate:
-                    self._store_certificate(certificate=provider_certificate.certificate)
-                    return True
+                return provider_certificate.certificate
+        return None
+
+    def _update_certificate(self, provider_certificate) -> bool:
+        """Compares the provided certificate to what is stored.
+
+        Returns True if the certificate was updated
+        """
+        existing_certificate = (
+            self._get_stored_certificate() if self._certificate_is_stored() else ""
+        )
+
+        if not existing_certificate == provider_certificate:
+            self._store_certificate(certificate=provider_certificate)
+            return True
         return False
 
     def _generate_private_key(self) -> None:
@@ -197,7 +216,7 @@ class AUSFOperatorCharm(CharmBase):
 
     def _get_stored_csr(self) -> str:
         """Returns stored CSR."""
-        return str(self._container.pull(path=f"{CERTS_DIR_PATH}/{CSR_NAME}").read())
+        return self._container.pull(path=f"{CERTS_DIR_PATH}/{CSR_NAME}").read()
 
     def _get_stored_private_key(self) -> bytes:
         """Returns stored private key."""

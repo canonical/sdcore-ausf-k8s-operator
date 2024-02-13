@@ -14,6 +14,7 @@ from ops.pebble import Layer
 from scenario import Container, Context, Mount, Relation, State  # type: ignore[import]
 
 from charm import AUSFOperatorCharm
+from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 
 
 class TestCharm(unittest.TestCase):
@@ -172,12 +173,16 @@ class TestCharm(unittest.TestCase):
             WaitingStatus("Waiting for certificates to be stored"),
         )
 
+    @patch(
+        "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
+    )
     @patch("ops.model.Container.exists")
     @patch("charm.check_output")
     def test_given_relations_created_and_nrf_data_available_and_certificate_stored_when_pebble_ready_then_config_file_rendered_and_pushed(  # noqa: E501
         self,
         patch_check_output,
         patch_exists,
+        patch_get_assigned_certificates,
     ):
         config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
@@ -187,12 +192,20 @@ class TestCharm(unittest.TestCase):
                 "config_dir": Mount("/free5gc/config", config_dir.name),
             },
         )
+        csr = b"never gonna make you cry"
+        certificate = "never gonna run around and desert you"
+        provider_certificate = Mock(ProviderCertificate)
+        provider_certificate.certificate = certificate
+        provider_certificate.csr = csr.decode()
+        patch_get_assigned_certificates.return_value = [
+            provider_certificate,
+        ]
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna let you down")
-        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna run around and desert you")
-        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna make you cry")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_pem_file:
+            ausf_pem_file.write(certificate)
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
+            ausf_csr_file.write(csr.decode())
         state_in = State(
             leader=True,
             containers=[container],
@@ -211,12 +224,16 @@ class TestCharm(unittest.TestCase):
             expected_content = expected.read().strip()
             self.assertEqual(actual_content, expected_content)
 
+    @patch(
+        "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
+    )
     @patch("ops.model.Container.exists")
     @patch("charm.check_output")
     def test_config_pushed_but_content_changed_when_pebble_ready_then_new_config_content_is_pushed(  # noqa: E501
         self,
         patch_check_output,
         patch_exists,
+        patch_get_assigned_certificates,
     ):
         config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
@@ -226,12 +243,20 @@ class TestCharm(unittest.TestCase):
                 "config_dir": Mount("/free5gc/config", config_dir.name),
             },
         )
+        csr = b"never gonna make you cry"
+        certificate = "never gonna run around and desert you"
+        provider_certificate = Mock(ProviderCertificate)
+        provider_certificate.certificate = certificate
+        provider_certificate.csr = csr.decode()
+        patch_get_assigned_certificates.return_value = [
+            provider_certificate,
+        ]
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna let you down")
-        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna run around and desert you")
-        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna make you cry")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_pem_file:
+            ausf_pem_file.write(certificate)
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
+            ausf_csr_file.write(csr.decode())
         state_in = State(
             leader=True,
             containers=[container],
@@ -252,12 +277,16 @@ class TestCharm(unittest.TestCase):
             expected_content = expected.read().strip()
             self.assertEqual(actual_content, expected_content)
 
+    @patch(
+        "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
+    )
     @patch("ops.model.Container.exists")
     @patch("charm.check_output")
     def test_given_relation_available_and_config_pushed_when_pebble_ready_then_pebble_layer_is_added_correctly(  # noqa: E501
         self,
         patch_check_output,
         patch_exists,
+        patch_get_assigned_certificates,
     ):
         config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
@@ -267,12 +296,20 @@ class TestCharm(unittest.TestCase):
                 "config_dir": Mount("/free5gc/config", config_dir.name),
             },
         )
+        csr = b"never gonna make you cry"
+        certificate = "never gonna run around and desert you"
+        provider_certificate = Mock(ProviderCertificate)
+        provider_certificate.certificate = certificate
+        provider_certificate.csr = csr.decode()
+        patch_get_assigned_certificates.return_value = [
+            provider_certificate,
+        ]
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna let you down")
-        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna run around and desert you")
-        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna make you cry")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_pem_file:
+            ausf_pem_file.write(certificate)
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
+            ausf_csr_file.write(csr.decode())
         state_in = State(
             leader=True,
             containers=[container],
@@ -304,12 +341,16 @@ class TestCharm(unittest.TestCase):
         updated_plan = state_out.containers[0].layers["ausf"]
         self.assertEqual(expected_plan, updated_plan)
 
+    @patch(
+        "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
+    )
     @patch("ops.model.Container.exists")
     @patch("charm.check_output")
     def test_relations_available_and_config_pushed_and_pebble_updated_when_pebble_ready_then_status_is_active(  # noqa: E501
         self,
         patch_check_output,
         patch_exists,
+        patch_get_assigned_certificates,
     ):
         config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
@@ -319,12 +360,20 @@ class TestCharm(unittest.TestCase):
                 "config_dir": Mount("/free5gc/config", config_dir.name),
             },
         )
+        csr = b"never gonna make you cry"
+        certificate = "never gonna run around and desert you"
+        provider_certificate = Mock(ProviderCertificate)
+        provider_certificate.certificate = certificate
+        provider_certificate.csr = csr.decode()
+        patch_get_assigned_certificates.return_value = [
+            provider_certificate,
+        ]
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna let you down")
-        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna run around and desert you")
-        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna make you cry")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_pem_file:
+            ausf_pem_file.write(certificate)
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
+            ausf_csr_file.write(csr.decode())
         state_in = State(
             leader=True,
             containers=[container],
@@ -363,6 +412,9 @@ class TestCharm(unittest.TestCase):
             WaitingStatus("Waiting for pod IP address to be available"),
         )
 
+    @patch(
+        "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
+    )
     @patch("ops.model.Container.exists")
     @patch("ops.model.Container.restart")
     @patch("charm.check_output")
@@ -371,6 +423,7 @@ class TestCharm(unittest.TestCase):
         patch_check_output,
         patch_restart,
         patch_exists,
+        patch_get_assigned_certificates,
     ):
         config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
@@ -380,12 +433,20 @@ class TestCharm(unittest.TestCase):
                 "config_dir": Mount("/free5gc/config", config_dir.name),
             },
         )
+        csr = b"never gonna make you cry"
+        certificate = "never gonna run around and desert you"
+        provider_certificate = Mock(ProviderCertificate)
+        provider_certificate.certificate = certificate
+        provider_certificate.csr = csr.decode()
+        patch_get_assigned_certificates.return_value = [
+            provider_certificate,
+        ]
         with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
             ausf_key_file.write("never gonna let you down")
-        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna run around and desert you")
-        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna make you cry")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_pem_file:
+            ausf_pem_file.write(certificate)
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
+            ausf_csr_file.write(csr.decode())
         state_in = State(
             leader=True,
             containers=[container],
@@ -445,6 +506,9 @@ class TestCharm(unittest.TestCase):
 
         patch_restart.assert_not_called()
 
+    @patch(
+        "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
+    )
     @patch("ops.model.Container.exists")
     @patch("ops.model.Container.restart")
     @patch("charm.check_output")
@@ -453,6 +517,7 @@ class TestCharm(unittest.TestCase):
         patch_check_output,
         patch_restart,
         patch_exists,
+        patch_get_assigned_certificates,
     ):
         config_dir = tempfile.TemporaryDirectory()
         applied_plan = Layer(
@@ -477,12 +542,6 @@ class TestCharm(unittest.TestCase):
         )
         config_dir = tempfile.TemporaryDirectory()
         cert_dir = tempfile.TemporaryDirectory()
-        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna let you down")
-        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna run around and desert you")
-        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_key_file:
-            ausf_key_file.write("never gonna make you cry")
         container = self.container.replace(
             mounts={
                 "cert_dir": Mount("/support/TLS", cert_dir.name),
@@ -490,6 +549,20 @@ class TestCharm(unittest.TestCase):
             },
             layers={"ausf": applied_plan},
         )
+        csr = b"never gonna make you cry"
+        certificate = "never gonna run around and desert you"
+        provider_certificate = Mock(ProviderCertificate)
+        provider_certificate.certificate = certificate
+        provider_certificate.csr = csr.decode()
+        patch_get_assigned_certificates.return_value = [
+            provider_certificate,
+        ]
+        with open(Path(cert_dir.name) / "ausf.key", "w") as ausf_key_file:
+            ausf_key_file.write("never gonna let you down")
+        with open(Path(cert_dir.name) / "ausf.pem", "w") as ausf_pem_file:
+            ausf_pem_file.write(certificate)
+        with open(Path(cert_dir.name) / "ausf.csr", "w") as ausf_csr_file:
+            ausf_csr_file.write(csr.decode())
         state_in = State(
             leader=True,
             containers=[container],

@@ -21,6 +21,7 @@ APP_NAME = METADATA["name"]
 DB_APPLICATION_NAME = "mongodb-k8s"
 NRF_APPLICATION_NAME = "sdcore-nrf-k8s"
 TLS_PROVIDER_NAME = "self-signed-certificates"
+GRAFANA_AGENT_CHARM_NAME = "grafana-agent-k8s"
 
 
 async def _deploy_mongodb(ops_test: OpsTest):
@@ -54,15 +55,26 @@ async def _deploy_tls_provider(ops_test: OpsTest):
     )
 
 
+async def _deploy_grafana_agent(ops_test: OpsTest):
+    assert ops_test.model
+    await ops_test.model.deploy(
+        GRAFANA_AGENT_CHARM_NAME,
+        application_name=GRAFANA_AGENT_CHARM_NAME,
+        channel="stable",
+    )
+
+
 @pytest.fixture(scope="module")
 @pytest.mark.abort_on_fail
 async def build_and_deploy(ops_test: OpsTest):
     """Build the charm-under-test and deploy it."""
     deploy_nrf = asyncio.create_task(_deploy_sdcore_nrf_operator(ops_test))
     deploy_tls_provider = asyncio.create_task(_deploy_tls_provider(ops_test))
+    deploy_grafana_agent = asyncio.create_task(_deploy_grafana_agent(ops_test))
     charm = await ops_test.build_charm(".")
     await deploy_tls_provider
     await deploy_nrf
+    await deploy_grafana_agent
     resources = {
         "ausf-image": METADATA["resources"]["ausf-image"]["upstream-source"],
     }
@@ -79,6 +91,7 @@ async def test_relate_and_wait_for_active_status(ops_test: OpsTest, build_and_de
     assert ops_test.model
     await ops_test.model.integrate(relation1=APP_NAME, relation2=NRF_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=APP_NAME, relation2=TLS_PROVIDER_NAME)
+    await ops_test.model.integrate(relation1=APP_NAME, relation2=GRAFANA_AGENT_CHARM_NAME)
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME],
         status="active",

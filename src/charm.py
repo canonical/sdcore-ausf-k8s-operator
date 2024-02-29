@@ -9,6 +9,7 @@ from ipaddress import IPv4Address
 from subprocess import check_output
 from typing import Optional
 
+from charms.loki_k8s.v1.loki_push_api import LogForwarder  # type: ignore[import]
 from charms.sdcore_nrf_k8s.v0.fiveg_nrf import NRFRequires  # type: ignore[import]
 from charms.tls_certificates_interface.v3.tls_certificates import (  # type: ignore[import]
     CertificateExpiringEvent,
@@ -35,6 +36,7 @@ PRIVATE_KEY_NAME = "ausf.key"
 CSR_NAME = "ausf.csr"
 CERTIFICATE_NAME = "ausf.pem"
 CERTIFICATE_COMMON_NAME = "ausf.sdcore"
+LOGGING_RELATION_NAME = "logging"
 
 
 class AUSFOperatorCharm(CharmBase):
@@ -55,7 +57,7 @@ class AUSFOperatorCharm(CharmBase):
         self._nrf_requires = NRFRequires(charm=self, relation_name="fiveg_nrf")
         self.unit.set_ports(SBI_PORT)
         self._certificates = TLSCertificatesRequiresV3(self, "certificates")
-
+        self._logging = LogForwarder(charm=self, relation_name=LOGGING_RELATION_NAME)
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)
         self.framework.observe(self.on.fiveg_nrf_relation_joined, self._configure_ausf)
         self.framework.observe(self._nrf_requires.on.nrf_available, self._configure_ausf)

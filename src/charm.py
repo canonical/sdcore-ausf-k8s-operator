@@ -18,9 +18,16 @@ from charms.tls_certificates_interface.v3.tls_certificates import (  # type: ign
     generate_private_key,
 )
 from jinja2 import Environment, FileSystemLoader
+from ops import (
+    ActiveStatus,
+    BlockedStatus,
+    CollectStatusEvent,
+    ModelError,
+    RelationBrokenEvent,
+    WaitingStatus,
+)
 from ops.charm import CharmBase, EventBase
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer, PathError
 
 logger = logging.getLogger(__name__)
@@ -44,24 +51,17 @@ class AUSFOperatorCharm(CharmBase):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
-        if not self.unit.is_leader():
-            # NOTE: In cases where leader status is lost before the charm is
-            # finished processing all teardown events, this prevents teardown
-            # event code from running. Luckily, for this charm, none of the
-            # teardown code is necessary to preform if we're removing the
-            # charm.
-            self.unit.status = BlockedStatus("Scaling is not implemented for this charm")
-            return
         self._container_name = self._service_name = "ausf"
         self._container = self.unit.get_container(self._container_name)
         self._nrf_requires = NRFRequires(charm=self, relation_name="fiveg_nrf")
         self.unit.set_ports(SBI_PORT)
         self._certificates = TLSCertificatesRequiresV3(self, "certificates")
         self._logging = LogForwarder(charm=self, relation_name=LOGGING_RELATION_NAME)
+        self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)
         self.framework.observe(self.on.fiveg_nrf_relation_joined, self._configure_ausf)
         self.framework.observe(self._nrf_requires.on.nrf_available, self._configure_ausf)
-        self.framework.observe(self._nrf_requires.on.nrf_broken, self._on_nrf_broken)
+        self.framework.observe(self._nrf_requires.on.nrf_broken, self._configure_ausf)
 
         self.framework.observe(self.on.certificates_relation_joined, self._configure_ausf)
         self.framework.observe(
@@ -72,6 +72,90 @@ class AUSFOperatorCharm(CharmBase):
             self._certificates.on.certificate_expiring, self._on_certificate_expiring
         )
 
+    def _on_collect_unit_status(self, event: CollectStatusEvent):
+        """Check the unit status and set to Unit when CollectStatusEvent is fired.
+
+        Args:
+            event: CollectStatusEvent
+        """
+        if not self.unit.is_leader():
+            # NOTE: In cases where leader status is lost before the charm is
+            # finished processing all teardown events, this prevents teardown
+            # event code from running. Luckily, for this charm, none of the
+            # teardown code is necessary to perform if we're removing the
+            # charm.
+            event.add_status(BlockedStatus("Scaling is not implemented for this charm"))
+            return
+
+        if not self._container.can_connect():
+            event.add_status(WaitingStatus("Waiting for container to start"))
+            return
+
+        for relation in ["fiveg_nrf", "certificates"]:
+            if not self._relation_created(relation):
+                event.add_status(BlockedStatus(f"Waiting for {relation} relation"))
+                return
+
+        if not self._nrf_data_is_available:
+            event.add_status(WaitingStatus("Waiting for NRF data to be available"))
+            return
+
+        if not self._container.exists(path=CONFIG_DIR):
+            event.add_status(WaitingStatus("Waiting for storage to be attached"))
+            return
+
+        if not _get_pod_ip():
+            event.add_status(WaitingStatus("Waiting for pod IP address to be available"))
+            return
+
+        if self._csr_is_stored() and not self._get_current_provider_certificate():
+            event.add_status(WaitingStatus("Waiting for certificates to be stored"))
+            return
+
+        if not self._ausf_service_is_running():
+            event.add_status(WaitingStatus("Waiting for AUSF service to start"))
+            return
+
+        event.add_status(ActiveStatus())
+
+    def _ausf_service_is_running(self) -> bool:
+        """Check if the AUSF service is running.
+
+        Returns:
+            bool: Whether the AUSF service is running.
+        """
+        if not self._container.can_connect():
+            return False
+        try:
+            service = self._container.get_service(self._service_name)
+        except ModelError:
+            return False
+        return service.is_running()
+
+    def ready_to_configure(self) -> bool:
+        """Returns whether the preconditions are met to proceed with the configuration.
+
+        Returns:
+            ready_to_configure: True if all conditions are met else False
+        """
+        if not self._container.can_connect():
+            return False
+
+        for relation in ["fiveg_nrf", "certificates"]:
+            if not self._relation_created(relation):
+                return False
+
+        if not self._nrf_data_is_available:
+            return False
+
+        if not self._container.exists(path=CONFIG_DIR):
+            return False
+
+        if not _get_pod_ip():
+            return False
+
+        return True
+
     def _configure_ausf(
         self,
         event: EventBase,
@@ -81,40 +165,84 @@ class AUSFOperatorCharm(CharmBase):
         Args:
             event (EventBase): Juju event
         """
-        if not self._container.can_connect():
-            self.unit.status = WaitingStatus("Waiting for container to start")
-            return
-        for relation in ["fiveg_nrf", "certificates"]:
-            if not self._relation_created(relation):
-                self.unit.status = BlockedStatus(f"Waiting for {relation} relation")
-                return
-        if not self._nrf_data_is_available:
-            self.unit.status = WaitingStatus("Waiting for NRF data to be available")
-            return
-        if not self._container.exists(path=CONFIG_DIR):
-            self.unit.status = WaitingStatus("Waiting for storage to be attached")
-            return
-        if not _get_pod_ip():
-            self.unit.status = WaitingStatus("Waiting for pod IP address to be available")
+        if not self.ready_to_configure():
             return
         if not self._private_key_is_stored():
             self._generate_private_key()
+
         if not self._csr_is_stored():
             self._request_new_certificate()
-        certificate_changed = False
-        provider_certificate = self._get_current_provider_certificate()
-        if provider_certificate:
-            certificate_changed = self._update_certificate(
-                provider_certificate=provider_certificate
-            )
-        else:
-            self.unit.status = WaitingStatus("Waiting for certificates to be stored")
-            return
-        config_file_changed = self._apply_ausf_config()
-        self._configure_ausf_service(force_restart=(config_file_changed or certificate_changed))
-        self.unit.status = ActiveStatus()
 
-    def _on_certificates_relation_broken(self, event: EventBase) -> None:
+        provider_certificate = self._get_current_provider_certificate()
+        if not provider_certificate:
+            return
+
+        if certificate_update_required := self._is_certificate_update_required(
+            provider_certificate
+        ):
+            self._store_certificate(certificate=provider_certificate)
+
+        desired_config_file = self._generate_ausf_config_file()
+        if config_update_required := self._is_config_update_required(desired_config_file):
+            self._push_config_file(content=desired_config_file)
+
+        should_restart = config_update_required or certificate_update_required
+        self._configure_pebble(restart=should_restart)
+
+    def _generate_ausf_config_file(self) -> str:
+        """Handles creation of the AUSF config file based on a given template.
+
+        Returns:
+            content (str): desired config file content
+        """
+        return self._render_config_file(
+            ausf_group_id=AUSF_GROUP_ID,
+            ausf_ip=_get_pod_ip(),  # type: ignore[arg-type]
+            nrf_url=self._nrf_requires.nrf_url,
+            sbi_port=SBI_PORT,
+            scheme="https",
+        )
+
+    def _is_config_update_required(self, content: str) -> bool:
+        """Decides whether config update is required by checking existence and config content.
+
+        Args:
+            content (str): desired config file content
+
+        Returns:
+            True if config update is required else False
+        """
+        if not self._config_file_is_written() or not self._config_file_content_matches(
+            content=content
+        ):
+            return True
+        return False
+
+    def _config_file_is_written(self) -> bool:
+        """Returns whether the config file was written to the workload container.
+
+        Returns:
+            bool: Whether the config file was written.
+        """
+        return bool(self._container.exists(f"{CONFIG_DIR}/{CONFIG_FILE_NAME}"))
+
+    def _is_certificate_update_required(self, provider_certificate) -> bool:
+        """Checks the provided certificate and existing certificate.
+
+        Returns True if update is required.
+
+        Args:
+            provider_certificate: str
+        Returns:
+            True if update is required else False
+        """
+        return self._get_existing_certificate() != provider_certificate
+
+    def _get_existing_certificate(self) -> str:
+        """Returns the existing certificate if present else empty string."""
+        return self._get_stored_certificate() if self._certificate_is_stored() else ""
+
+    def _on_certificates_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Deletes TLS related artifacts and reconfigures workload."""
         if not self._container.can_connect():
             event.defer()
@@ -122,7 +250,6 @@ class AUSFOperatorCharm(CharmBase):
         self._delete_private_key()
         self._delete_csr()
         self._delete_certificate()
-        self.unit.status = BlockedStatus("Waiting for certificates relation")
 
     def _on_certificate_expiring(self, event: CertificateExpiringEvent):
         """Requests new certificate."""
@@ -134,14 +261,6 @@ class AUSFOperatorCharm(CharmBase):
             return
         self._request_new_certificate()
 
-    def _on_nrf_broken(self, event: EventBase) -> None:
-        """Event handler for NRF relation broken.
-
-        Args:
-            event (NRFBrokenEvent): Juju event
-        """
-        self.unit.status = BlockedStatus("Waiting for fiveg_nrf relation")
-
     def _get_current_provider_certificate(self) -> str | None:
         """Compares the current certificate request to what is in the interface.
 
@@ -152,20 +271,6 @@ class AUSFOperatorCharm(CharmBase):
             if provider_certificate.csr == csr:
                 return provider_certificate.certificate
         return None
-
-    def _update_certificate(self, provider_certificate) -> bool:
-        """Compares the provided certificate to what is stored.
-
-        Returns True if the certificate was updated
-        """
-        existing_certificate = (
-            self._get_stored_certificate() if self._certificate_is_stored() else ""
-        )
-
-        if not existing_certificate == provider_certificate:
-            self._store_certificate(certificate=provider_certificate)
-            return True
-        return False
 
     def _generate_private_key(self) -> None:
         """Generates and stores private key."""
@@ -248,26 +353,6 @@ class AUSFOperatorCharm(CharmBase):
         self._container.push(path=f"{CERTS_DIR_PATH}/{CSR_NAME}", source=csr.decode().strip())
         logger.info("Pushed CSR to workload")
 
-    def _apply_ausf_config(self) -> bool:
-        """Generate and push AUSF configuration file.
-
-        Returns:
-            bool: True if the configuration file was changed.
-        """
-        content = self._render_config_file(
-            ausf_group_id=AUSF_GROUP_ID,
-            ausf_ip=_get_pod_ip(),  # type: ignore[arg-type]
-            nrf_url=self._nrf_requires.nrf_url,
-            sbi_port=SBI_PORT,
-            scheme="https",
-        )
-        if not self._config_file_content_matches(content):
-            self._push_config_file(
-                content=content,
-            )
-            return True
-        return False
-
     def _render_config_file(
         self,
         *,
@@ -326,22 +411,18 @@ class AUSFOperatorCharm(CharmBase):
         )
         logger.info("Pushed %s config file", CONFIG_FILE_NAME)
 
-    def _configure_ausf_service(self, *, force_restart: bool = False) -> None:
-        """Manage AUSF's pebble layer and service.
-
-        Updates the pebble layer if the proposed config is different from the current one. If layer
-        has been updated also restart the workload service.
+    def _configure_pebble(self, restart: bool = False) -> None:
+        """Configure the Pebble layer.
 
         Args:
-            force_restart (bool): Allows for forcibly restarting the service even if Pebble plan
-                didn't change.
+            restart (bool): Whether to restart the Pebble service. Defaults to False.
         """
-        pebble_layer = self._pebble_layer
-        plan = self._container.get_plan()
-        if plan.services != pebble_layer.services or force_restart:
-            self._container.add_layer(self._container_name, pebble_layer, combine=True)
+        self._container.add_layer(self._container_name, self._pebble_layer, combine=True)
+        if restart:
             self._container.restart(self._service_name)
             logger.info("Restarted container %s", self._service_name)
+            return
+        self._container.replan()
 
     def _relation_created(self, relation_name: str) -> bool:
         """Return True if the relation is created, False otherwise.

@@ -51,13 +51,20 @@ class AUSFOperatorCharm(CharmBase):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
+        if not self.unit.is_leader():
+            # NOTE: In cases where leader status is lost before the charm is
+            # finished processing all teardown events, this prevents teardown
+            # event code from running. Luckily, for this charm, none of the
+            # teardown code is necessary to perform if we're removing the
+            # charm.
+            return
         self._container_name = self._service_name = "ausf"
         self._container = self.unit.get_container(self._container_name)
         self._nrf_requires = NRFRequires(charm=self, relation_name="fiveg_nrf")
         self.unit.set_ports(SBI_PORT)
         self._certificates = TLSCertificatesRequiresV3(self, "certificates")
         self._logging = LogForwarder(charm=self, relation_name=LOGGING_RELATION_NAME)
-        self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)
         self.framework.observe(self.on.fiveg_nrf_relation_joined, self._configure_ausf)
         self.framework.observe(self._nrf_requires.on.nrf_available, self._configure_ausf)
@@ -85,35 +92,43 @@ class AUSFOperatorCharm(CharmBase):
             # teardown code is necessary to perform if we're removing the
             # charm.
             event.add_status(BlockedStatus("Scaling is not implemented for this charm"))
+            logger.info("Scaling is not implemented for this charm")
             return
 
         if not self._container.can_connect():
             event.add_status(WaitingStatus("Waiting for container to start"))
+            logger.info("Waiting for container to start")
             return
 
         for relation in ["fiveg_nrf", "certificates"]:
             if not self._relation_created(relation):
                 event.add_status(BlockedStatus(f"Waiting for {relation} relation"))
+                logger.info("Waiting for %s  relation", relation)
                 return
 
         if not self._nrf_data_is_available:
             event.add_status(WaitingStatus("Waiting for NRF data to be available"))
+            logger.info("Waiting for NRF data to be available")
             return
 
         if not self._container.exists(path=CONFIG_DIR):
             event.add_status(WaitingStatus("Waiting for storage to be attached"))
+            logger.info("Waiting for storage to be attached")
             return
 
         if not _get_pod_ip():
             event.add_status(WaitingStatus("Waiting for pod IP address to be available"))
+            logger.info("Waiting for pod IP address to be available")
             return
 
         if self._csr_is_stored() and not self._get_current_provider_certificate():
             event.add_status(WaitingStatus("Waiting for certificates to be stored"))
+            logger.info("Waiting for certificates to be stored")
             return
 
         if not self._ausf_service_is_running():
             event.add_status(WaitingStatus("Waiting for AUSF service to start"))
+            logger.info("Waiting for AUSF service to start")
             return
 
         event.add_status(ActiveStatus())
@@ -166,7 +181,9 @@ class AUSFOperatorCharm(CharmBase):
             event (EventBase): Juju event
         """
         if not self.ready_to_configure():
+            logger.info("The preconditions for the configuration are not met yet.")
             return
+
         if not self._private_key_is_stored():
             self._generate_private_key()
 

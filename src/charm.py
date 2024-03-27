@@ -68,8 +68,6 @@ class AUSFOperatorCharm(CharmBase):
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)
         self.framework.observe(self.on.fiveg_nrf_relation_joined, self._configure_ausf)
         self.framework.observe(self._nrf_requires.on.nrf_available, self._configure_ausf)
-        self.framework.observe(self._nrf_requires.on.nrf_broken, self._configure_ausf)
-
         self.framework.observe(self.on.certificates_relation_joined, self._configure_ausf)
         self.framework.observe(
             self.on.certificates_relation_broken, self._on_certificates_relation_broken

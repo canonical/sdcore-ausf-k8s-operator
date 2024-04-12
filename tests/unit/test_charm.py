@@ -9,11 +9,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+from charm import AUSFOperatorCharm
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer
 from scenario import Container, Context, Mount, Relation, State  # type: ignore[import]
 
-from charm import AUSFOperatorCharm
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 
 

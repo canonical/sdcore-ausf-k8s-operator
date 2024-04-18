@@ -28,9 +28,8 @@ class TestCharmRelations(unittest.TestCase):
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
     )
-    @patch("ops.model.Container.remove_path")
     def test_given_charm_is_in_active_state_when_certificates_relation_broken_then_certificate_csr_and_private_key_are_removed(  # noqa: E501
-        self, patched_remove_path, patched_get_assigned_certificates, patched_check_output
+        self, patched_get_assigned_certificates, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -54,15 +53,14 @@ class TestCharmRelations(unittest.TestCase):
         self.harness.evaluate_status()
         self.assertEqual(self.harness.model.unit.status, ActiveStatus())
 
-        self.harness.remove_relation(certificates_relation_id)
+        self.harness.charm._on_certificates_relation_broken(event=Mock)
 
-        patched_remove_path.assert_has_calls(
-            [
-                call(path="/support/TLS/ausf.key"),
-                call(path="/support/TLS/ausf.csr"),
-                call(path="/support/TLS/ausf.pem"),
-            ]
-        )
+        with self.assertRaises(FileNotFoundError):
+            (root / "support/TLS/ausf.key").read_text()
+        with self.assertRaises(FileNotFoundError):
+            (root / "support/TLS/ausf.pem").read_text()
+        with self.assertRaises(FileNotFoundError):
+            (root / "support/TLS/ausf.csr").read_text()
 
     @patch("charm.check_output")
     @patch(
@@ -109,9 +107,8 @@ class TestCharmRelations(unittest.TestCase):
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
     )
-    @patch("ops.model.Container.push")
     def test_given_charm_is_in_active_state_when_nrf_available_then_ausf_config_is_updated(
-        self, patched_push, patched_get_assigned_certificates, patched_check_output
+        self, patched_get_assigned_certificates, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -145,11 +142,10 @@ class TestCharmRelations(unittest.TestCase):
         expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
         with open(expected_config_file_path, "r") as expected_config_file:
             expected_config = expected_config_file.read()
-            expected_config.replace(TEST_NRF_URL, new_nrf_url)
 
-            self.assertTrue(
-                call(path="/free5gc/config/ausfcfg.conf", source=expected_config, make_dirs=True)
-                in patched_push.mock_calls
+            self.assertEqual(
+                (root / "free5gc/config/ausfcfg.conf").read_text(),
+                expected_config.replace(TEST_NRF_URL, new_nrf_url),
             )
 
     def _create_charm_relations_and_relation_data(self) -> Tuple[int, int]:

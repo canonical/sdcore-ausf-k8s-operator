@@ -25,9 +25,8 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
 
     @patch("charm.check_output")
     @patch("charm.generate_private_key")
-    @patch("ops.model.Container.push")
     def test_given_charm_workload_is_ready_to_configure_and_private_key_is_not_stored_when_update_status_then_private_key_is_generated_and_stored_in_the_container(  # noqa: E501
-        self, patched_push, patched_generate_private_key, patched_check_output
+        self, patched_generate_private_key, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -44,16 +43,13 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         self.harness.evaluate_status()
 
         patched_generate_private_key.assert_called_once()
-        patched_push.assert_called_once_with(
-            path="/support/TLS/ausf.key", source=test_private_key.decode()
-        )
+        self.assertEqual((root / "support/TLS/ausf.key").read_text(), test_private_key.decode())
 
     @patch("charm.check_output")
     @patch("charm.generate_csr")
-    @patch("ops.model.Container.push")
     @patch("ops.model.Container.pull")
     def test_given_charm_workload_is_ready_to_configure_and_private_key_is_stored_but_csr_is_not_stored_when_update_status_then_csr_is_generated_and_stored_in_the_container(  # noqa: E501
-        self, patched_pull, patched_push, patched_generate_csr, patched_check_output
+        self, patched_pull, patched_generate_csr, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -65,9 +61,7 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         root = self.harness.get_filesystem_root("ausf")
         (root / "support/TLS/ausf.key").write_text(test_private_key.decode())
         patched_generate_csr.return_value = test_csr
-        patched_pull.side_effect = [
-            StringIO(test_private_key.decode()), StringIO(test_csr.decode())
-        ]
+        patched_pull.return_value = StringIO(test_private_key.decode())
 
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
@@ -77,9 +71,7 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
             subject="ausf.sdcore",
             sans_dns=["ausf.sdcore"],
         )
-        patched_push.assert_called_once_with(
-            path="/support/TLS/ausf.csr", source=test_csr.decode()
-        )
+        self.assertEqual((root / "support/TLS/ausf.csr").read_text(), test_csr.decode())
 
     @patch("charm.check_output")
     @patch("charm.generate_csr")
@@ -109,9 +101,8 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
     )
-    @patch("ops.model.Container.push")
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_needs_updating_when_update_status_then_new_provider_certificate_is_pushed_to_the_container(  # noqa: E501
-        self, patched_push, patched_get_assigned_certificates, patched_check_output
+        self, patched_get_assigned_certificates, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -134,17 +125,14 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        self.assertEqual(
-            patched_push.mock_calls[0], call(path="/support/TLS/ausf.pem", source=test_certificate)
-        )
+        self.assertEqual((root / "support/TLS/ausf.pem").read_text(), test_certificate)
 
     @patch("charm.check_output")
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
     )
-    @patch("ops.model.Container.push")
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_is_up_to_date_when_update_status_then_new_provider_certificate_is_not_pushed_to_the_container(  # noqa: E501
-        self, patched_push, patched_get_assigned_certificates, patched_check_output
+        self, patched_get_assigned_certificates, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -158,6 +146,7 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         (root / "support/TLS/ausf.csr").write_text(test_csr.decode())
         (root / "support/TLS/ausf.key").write_text(test_private_key.decode())
         (root / "support/TLS/ausf.pem").write_text(test_certificate)
+        certificate_file_creation_time = (root / "support/TLS/ausf.pem").lstat().st_mtime
         provider_certificate = Mock(ProviderCertificate)
         provider_certificate.certificate = test_certificate
         provider_certificate.csr = test_csr.decode()
@@ -168,17 +157,16 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        self.assertFalse(
-            call(path="/support/TLS/ausf.pem", source=test_certificate) in patched_push.mock_calls
+        self.assertEqual(
+            (root / "support/TLS/ausf.pem").lstat().st_mtime, certificate_file_creation_time
         )
 
     @patch("charm.check_output")
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
     )
-    @patch("ops.model.Container.push")
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_is_up_to_date_and_workload_config_needs_updating_when_update_status_then_new_workload_config_is_pushed_to_the_container(  # noqa: E501
-        self, patched_push, patched_get_assigned_certificates, patched_check_output
+        self, patched_get_assigned_certificates, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -205,17 +193,14 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
         with open(expected_config_file_path, "r") as expected_config_file:
             expected_config = expected_config_file.read()
-            patched_push.assert_called_once_with(
-                path="/free5gc/config/ausfcfg.conf", source=expected_config, make_dirs=True
-            )
+            self.assertEqual((root / "free5gc/config/ausfcfg.conf").read_text(), expected_config)
 
     @patch("charm.check_output")
     @patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates",  # noqa: E501
     )
-    @patch("ops.model.Container.push")
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_is_up_to_date_and_workload_config_is_up_to_date_when_update_status_then_new_workload_config_is_not_pushed_to_the_container(  # noqa: E501
-        self, patched_push, patched_get_assigned_certificates, patched_check_output
+        self, patched_get_assigned_certificates, patched_check_output
     ):
         test_private_key = b"whatever private key"
         test_csr = b"whatever csr"
@@ -233,6 +218,7 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         with open(expected_config_file_path, "r") as expected_config_file:
             expected_config = expected_config_file.read()
             (root / "free5gc/config/ausfcfg.conf").write_text(expected_config)
+        config_file_creation_time = (root / "free5gc/config/ausfcfg.conf").lstat().st_mtime
         provider_certificate = Mock(ProviderCertificate)
         provider_certificate.certificate = test_certificate
         provider_certificate.csr = test_csr.decode()
@@ -243,7 +229,9 @@ class TestCharmWorkloadConfiguration(unittest.TestCase):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        patched_push.assert_not_called()
+        self.assertEqual(
+            (root / "free5gc/config/ausfcfg.conf").lstat().st_mtime, config_file_creation_time
+        )
 
     @patch("charm.check_output")
     @patch(

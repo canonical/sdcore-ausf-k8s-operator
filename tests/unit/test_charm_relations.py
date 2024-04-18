@@ -4,7 +4,7 @@
 import unittest
 from pathlib import Path
 from typing import Tuple
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 from charm import AUSFOperatorCharm
 from ops import ActiveStatus, testing

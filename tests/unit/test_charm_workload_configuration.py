@@ -4,7 +4,7 @@
 import unittest
 from io import StringIO
 from pathlib import Path
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 from charm import AUSFOperatorCharm
 from ops import testing

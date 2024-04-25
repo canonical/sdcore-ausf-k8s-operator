@@ -3,7 +3,7 @@ name: Main branch CI
 on:
   pull_request:
     branches:
-      - main
+      - v1.4
   push:
   schedule:
     - cron: "20 6 * * 0"

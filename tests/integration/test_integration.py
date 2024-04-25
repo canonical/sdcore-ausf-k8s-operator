@@ -41,11 +41,7 @@ async def _deploy_mongodb(ops_test: OpsTest):
 async def _deploy_and_integrate_nrf_and_mongodb(ops_test: OpsTest):
     assert ops_test.model
     await _deploy_mongodb(ops_test)
-    await ops_test.model.deploy(
-        NRF_APPLICATION_NAME,
-        application_name=NRF_APPLICATION_NAME,
-        channel=NRF_APPLICATION_CHANNEL,
-    )
+    await _deploy_nrf(ops_test)
     await ops_test.model.integrate(relation1=DB_APPLICATION_NAME, relation2=NRF_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
 

@@ -75,12 +75,12 @@ async def _deploy_grafana_agent(ops_test: OpsTest):
 
 @pytest.fixture(scope="module")
 @pytest.mark.abort_on_fail
-async def build_and_deploy(ops_test: OpsTest):
-    """Build the charm-under-test and deploy it."""
+async def deploy(ops_test: OpsTest, request):
+    """Deploy necessary components."""
     deploy_nrf = asyncio.create_task(_deploy_and_integrate_nrf_and_mongodb(ops_test))
     deploy_tls_provider = asyncio.create_task(_deploy_tls_provider(ops_test))
     deploy_grafana_agent = asyncio.create_task(_deploy_grafana_agent(ops_test))
-    charm = await ops_test.build_charm(".")
+    charm = Path(request.config.getoption("--charm_path")).resolve()
     await deploy_tls_provider
     await deploy_nrf
     await deploy_grafana_agent
@@ -96,7 +96,7 @@ async def build_and_deploy(ops_test: OpsTest):
 
 
 @pytest.mark.abort_on_fail
-async def test_relate_and_wait_for_active_status(ops_test: OpsTest, build_and_deploy):
+async def test_relate_and_wait_for_active_status(ops_test: OpsTest, deploy):
     assert ops_test.model
     await ops_test.model.integrate(relation1=APP_NAME, relation2=NRF_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=APP_NAME, relation2=TLS_PROVIDER_NAME)
@@ -109,14 +109,14 @@ async def test_relate_and_wait_for_active_status(ops_test: OpsTest, build_and_de
 
 
 @pytest.mark.abort_on_fail
-async def test_remove_nrf_and_wait_for_blocked_status(ops_test: OpsTest, build_and_deploy):
+async def test_remove_nrf_and_wait_for_blocked_status(ops_test: OpsTest, deploy):
     assert ops_test.model
     await ops_test.model.remove_application(NRF_APPLICATION_NAME, block_until_done=True)
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=TIMEOUT)
 
 
 @pytest.mark.abort_on_fail
-async def test_restore_nrf_and_wait_for_active_status(ops_test: OpsTest, build_and_deploy):
+async def test_restore_nrf_and_wait_for_active_status(ops_test: OpsTest, deploy):
     assert ops_test.model
     await _deploy_nrf(ops_test)
     await ops_test.model.integrate(
@@ -128,14 +128,14 @@ async def test_restore_nrf_and_wait_for_active_status(ops_test: OpsTest, build_a
 
 
 @pytest.mark.abort_on_fail
-async def test_remove_tls_and_wait_for_blocked_status(ops_test: OpsTest, build_and_deploy):
+async def test_remove_tls_and_wait_for_blocked_status(ops_test: OpsTest, deploy):
     assert ops_test.model
     await ops_test.model.remove_application(TLS_PROVIDER_NAME, block_until_done=True)
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=TIMEOUT)
 
 
 @pytest.mark.abort_on_fail
-async def test_restore_tls_and_wait_for_active_status(ops_test: OpsTest, build_and_deploy):
+async def test_restore_tls_and_wait_for_active_status(ops_test: OpsTest, deploy):
     assert ops_test.model
     await _deploy_tls_provider(ops_test)
     await ops_test.model.integrate(relation1=APP_NAME, relation2=TLS_PROVIDER_NAME)
@@ -144,7 +144,7 @@ async def test_restore_tls_and_wait_for_active_status(ops_test: OpsTest, build_a
 
 @pytest.mark.abort_on_fail
 async def test_when_scale_app_beyond_1_then_only_one_unit_is_active(
-    ops_test: OpsTest, build_and_deploy
+    ops_test: OpsTest, deploy
 ):
     assert ops_test.model
     assert isinstance(app := ops_test.model.applications[APP_NAME], Application)
@@ -155,6 +155,6 @@ async def test_when_scale_app_beyond_1_then_only_one_unit_is_active(
     assert unit_statuses.get("blocked") == 2
 
 
-async def test_remove_app(ops_test: OpsTest, build_and_deploy):
+async def test_remove_app(ops_test: OpsTest, deploy):
     assert ops_test.model
     await ops_test.model.remove_application(APP_NAME, block_until_done=True)

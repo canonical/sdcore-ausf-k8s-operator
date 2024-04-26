@@ -3,7 +3,6 @@
 # See LICENSE file for licensing details.
 
 
-import asyncio
 import logging
 from collections import Counter
 from pathlib import Path

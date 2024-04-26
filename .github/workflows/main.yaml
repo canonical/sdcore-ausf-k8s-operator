@@ -49,7 +49,6 @@ jobs:
     if: ${{ github.ref_name == 'main' }}
     uses: canonical/sdcore-github-workflows/.github/workflows/publish-charm.yaml@v1.0.0
     with:
-      charm-file-name: "sdcore-ausf-k8s_ubuntu-22.04-amd64.charm"
       track-name: 1.5
     secrets:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
@@ -65,7 +64,6 @@ jobs:
     uses: canonical/sdcore-github-workflows/.github/workflows/publish-charm.yaml@v1.0.0
     with:
       branch-name: ${{ github.ref_name }}
-      charm-file-name: "sdcore-ausf-k8s_ubuntu-22.04-amd64.charm"
       track-name: 1.5
     secrets:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}

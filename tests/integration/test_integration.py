@@ -38,14 +38,6 @@ async def _deploy_mongodb(ops_test: OpsTest):
     )
 
 
-async def _deploy_and_integrate_nrf_and_mongodb(ops_test: OpsTest):
-    assert ops_test.model
-    await _deploy_mongodb(ops_test)
-    await _deploy_nrf(ops_test)
-    await ops_test.model.integrate(relation1=DB_APPLICATION_NAME, relation2=NRF_APPLICATION_NAME)
-    await ops_test.model.integrate(relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
-
-
 async def _deploy_nrf(ops_test: OpsTest):
     assert ops_test.model
     await ops_test.model.deploy(
@@ -77,13 +69,12 @@ async def _deploy_grafana_agent(ops_test: OpsTest):
 @pytest.mark.abort_on_fail
 async def deploy(ops_test: OpsTest, request):
     """Deploy necessary components."""
-    deploy_nrf = asyncio.create_task(_deploy_and_integrate_nrf_and_mongodb(ops_test))
-    deploy_tls_provider = asyncio.create_task(_deploy_tls_provider(ops_test))
-    deploy_grafana_agent = asyncio.create_task(_deploy_grafana_agent(ops_test))
+    assert ops_test.model
+    await _deploy_mongodb(ops_test)
+    await _deploy_nrf(ops_test)
+    await _deploy_tls_provider(ops_test)
+    await _deploy_grafana_agent(ops_test)
     charm = Path(request.config.getoption("--charm_path")).resolve()
-    await deploy_tls_provider
-    await deploy_nrf
-    await deploy_grafana_agent
     resources = {
         "ausf-image": METADATA["resources"]["ausf-image"]["upstream-source"],
     }
@@ -93,6 +84,8 @@ async def deploy(ops_test: OpsTest, request):
         application_name=APP_NAME,
         trust=True,
     )
+    await ops_test.model.integrate(relation1=DB_APPLICATION_NAME, relation2=NRF_APPLICATION_NAME)
+    await ops_test.model.integrate(relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
 
 
 @pytest.mark.abort_on_fail

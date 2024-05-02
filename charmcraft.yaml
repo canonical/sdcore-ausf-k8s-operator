@@ -1,6 +1,5 @@
 name: sdcore-ausf-k8s
 
-display-name: SD-Core 5G AUSF K8s
 summary: A Charmed Operator for SD-Core's AUSF component.
 description: |
   A Charmed Operator for SD-Core's Authentication Server Function (AUSF) component.

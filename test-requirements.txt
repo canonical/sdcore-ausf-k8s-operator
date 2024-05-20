@@ -16,6 +16,7 @@ certifi==2024.2.2
     #   requests
 cffi==1.16.0
     # via
+    #   -c requirements.txt
     #   cryptography
     #   pynacl
 charset-normalizer==3.3.2
@@ -25,7 +26,9 @@ codespell==2.2.6
 coverage[toml]==7.5.1
     # via -r test-requirements.in
 cryptography==42.0.7
-    # via paramiko
+    # via
+    #   -c requirements.txt
+    #   paramiko
 decorator==5.1.1
     # via
     #   ipdb
@@ -39,7 +42,9 @@ hvac==2.1.0
 idna==3.7
     # via requests
 iniconfig==2.0.0
-    # via pytest
+    # via
+    #   -c requirements.txt
+    #   pytest
 ipdb==0.13.13
     # via pytest-operator
 ipython==8.22.1
@@ -74,6 +79,7 @@ oauthlib==3.2.2
     #   requests-oauthlib
 packaging==23.2
     # via
+    #   -c requirements.txt
     #   juju
     #   pytest
 paramiko==3.4.0
@@ -83,7 +89,9 @@ parso==0.8.3
 pexpect==4.9.0
     # via ipython
 pluggy==1.5.0
-    # via pytest
+    # via
+    #   -c requirements.txt
+    #   pytest
 prompt-toolkit==3.0.43
     # via ipython
 protobuf==4.25.3
@@ -100,7 +108,9 @@ pyasn1==0.5.1
 pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
-    # via cffi
+    # via
+    #   -c requirements.txt
+    #   cffi
 pygments==2.17.2
     # via ipython
 pymacaroons==0.13.0
@@ -116,11 +126,14 @@ pyrfc3339==1.1
     #   macaroonbakery
 pytest==8.2.1
     # via
+    #   -c requirements.txt
     #   -r test-requirements.in
     #   pytest-asyncio
     #   pytest-operator
-pytest-asyncio==0.21.1
-    # via pytest-operator
+pytest-asyncio==0.21.2
+    # via
+    #   -r test-requirements.in
+    #   pytest-operator
 pytest-operator==0.35.0
     # via -r test-requirements.in
 python-dateutil==2.8.2
@@ -129,6 +142,7 @@ pytz==2024.1
     # via pyrfc3339
 pyyaml==6.0.1
     # via
+    #   -c requirements.txt
     #   juju
     #   kubernetes
     #   pytest-operator
@@ -163,6 +177,7 @@ types-pyyaml==6.0.12.20240311
     # via -r test-requirements.in
 typing-extensions==4.9.0
     # via
+    #   -c requirements.txt
     #   mypy
     #   typing-inspect
 typing-inspect==0.9.0
@@ -174,6 +189,8 @@ urllib3==2.2.1
 wcwidth==0.2.13
     # via prompt-toolkit
 websocket-client==1.7.0
-    # via kubernetes
+    # via
+    #   -c requirements.txt
+    #   kubernetes
 websockets==12.0
     # via juju

@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 from pathlib import Path
-from typing import Generator, Tuple
+from typing import Generator
 from unittest.mock import Mock, patch
 
 import pytest
@@ -53,25 +53,32 @@ class TestCharmRelations:
         self.harness.add_storage(storage_name="config", attach=True)
 
     @pytest.fixture()
-    def create_charm_relations_and_relation_data(self) -> Generator[Tuple[int, int], None, None]:
-        certificates_relation_id = self.harness.add_relation(
-            relation_name="certificates", remote_app="whatever-certs"
-        )
-        fiveg_nrf_relation_id = self.harness.add_relation(
-            relation_name="fiveg_nrf", remote_app="whatever-nrf"
-        )
+    def create_nrf_relation_and_set_nrf_url(self, fiveg_nrf_relation_id):
         self.harness.add_relation_unit(
             relation_id=fiveg_nrf_relation_id, remote_unit_name="whatever-nrf/0"
         )
         self.harness.update_relation_data(
             relation_id=fiveg_nrf_relation_id,
             app_or_unit="whatever-nrf",
-            key_values={"url": TEST_NRF_URL},
+            key_values={"url": "https://nrf-example.com:1234"},
         )
-        yield certificates_relation_id, fiveg_nrf_relation_id
+
+    @pytest.fixture()
+    def fiveg_nrf_relation_id(self) -> Generator[int, None, None]:
+        yield self.harness.add_relation(
+            relation_name="fiveg_nrf",
+            remote_app="whatever-nrf",
+        )
+
+    @pytest.fixture()
+    def certificates_relation_id(self) -> Generator[int, None, None]:
+        yield self.harness.add_relation(
+            relation_name="certificates",
+            remote_app="whatever",
+        )
 
     def test_given_charm_is_in_active_state_when_certificates_relation_broken_then_certificate_csr_and_private_key_are_removed(  # noqa: E501
-        self, create_charm_relations_and_relation_data, add_storage
+        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -99,7 +106,7 @@ class TestCharmRelations:
             (root / "support/TLS/ausf.csr").read_text()
 
     def test_given_charm_is_in_active_state_when_certificate_expiring_then_new_certificate_is_requested(  # noqa E501
-        self, create_charm_relations_and_relation_data, add_storage
+        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -123,8 +130,16 @@ class TestCharmRelations:
         )
 
     def test_given_charm_is_in_active_state_when_nrf_available_then_ausf_config_is_updated(
-        self, create_charm_relations_and_relation_data, add_storage
+        self, certificates_relation_id, fiveg_nrf_relation_id, add_storage
     ):
+        self.harness.add_relation_unit(
+            relation_id=fiveg_nrf_relation_id, remote_unit_name="whatever-nrf/0"
+        )
+        self.harness.update_relation_data(
+            relation_id=fiveg_nrf_relation_id,
+            app_or_unit="whatever-nrf",
+            key_values={"url": "https://nrf-example.com:1234"},
+        )
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
         root = self.harness.get_filesystem_root(CONTAINER_NAME)
@@ -143,7 +158,7 @@ class TestCharmRelations:
 
         new_nrf_url = "https://new-nrf-url.com:1234"
         self.harness.update_relation_data(
-            relation_id=create_charm_relations_and_relation_data[1],
+            relation_id=fiveg_nrf_relation_id,
             app_or_unit="whatever-nrf",
             key_values={"url": new_nrf_url},
         )

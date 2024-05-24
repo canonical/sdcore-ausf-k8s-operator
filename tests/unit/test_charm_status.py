@@ -20,13 +20,13 @@ NAMESPACE = "whatever"
 class TestCharmStatus:
     patcher_check_output = patch("charm.check_output")
     patcher_get_assigned_certificates = patch("charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates")  # noqa: E501
-    patcher_get = patch("ops.model.Container.get_service")
+    patcher_get_service = patch("ops.model.Container.get_service")
 
     @pytest.fixture()
     def setup(self):
         self.mock_check_output = TestCharmStatus.patcher_check_output.start()
         self.mock_get_assigned_certificates = TestCharmStatus.patcher_get_assigned_certificates.start()  # noqa: E501
-        self.mock_get = TestCharmStatus.patcher_get.start()
+        self.mock_get_service = TestCharmStatus.patcher_get_service.start()
 
     @staticmethod
     def teardown() -> None:
@@ -170,7 +170,7 @@ class TestCharmStatus:
         self.mock_get_assigned_certificates.return_value = [
             provider_certificate,
         ]
-        self.mock_get.side_effect = ModelError()
+        self.mock_get_service.side_effect = ModelError()
 
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()

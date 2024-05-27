@@ -172,12 +172,12 @@ class AUSFOperatorCharm(CharmBase):
 
     def _configure_ausf(
         self,
-        event: EventBase,
+        _: EventBase,
     ) -> None:
         """Configure AUSF configuration file and pebble service.
 
         Args:
-            event (EventBase): Juju event
+            _ (EventBase): Juju event
         """
         if not self.ready_to_configure():
             logger.info("The preconditions for the configuration are not met yet.")
@@ -369,8 +369,8 @@ class AUSFOperatorCharm(CharmBase):
         self._container.push(path=f"{CERTS_DIR_PATH}/{CSR_NAME}", source=csr.decode().strip())
         logger.info("Pushed CSR to workload")
 
+    @staticmethod
     def _render_config_file(
-        self,
         *,
         ausf_group_id: str,
         ausf_ip: str,

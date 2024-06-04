@@ -76,6 +76,7 @@ class AUSFOperatorCharm(CharmBase):
         self.framework.observe(self.on.update_status, self._configure_ausf)
         self.framework.observe(self.on.fiveg_nrf_relation_joined, self._configure_ausf)
         self.framework.observe(self._nrf_requires.on.nrf_available, self._configure_ausf)
+        self.framework.observe(self.on.sdcore_config_relation_joined, self._configure_ausf)
         self.framework.observe(self._webui.on.webui_url_available, self._configure_ausf)
         self.framework.observe(self.on.certificates_relation_joined, self._configure_ausf)
         self.framework.observe(

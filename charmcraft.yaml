@@ -41,6 +41,8 @@ assumes:
 requires:
   fiveg_nrf:
     interface: fiveg_nrf
+  sdcore_config:
+    interface: sdcore_config
   certificates:
     interface: tls-certificates
   logging:

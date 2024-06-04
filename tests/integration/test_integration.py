@@ -21,47 +21,13 @@ DB_APPLICATION_NAME = "mongodb-k8s"
 DB_APPLICATION_CHANNEL = "6/beta"
 NRF_APPLICATION_NAME = "sdcore-nrf-k8s"
 NRF_APPLICATION_CHANNEL = "1.5/edge"
+WEBUI_APPLICATION_NAME = "sdcore-webui-k8s"
+WEBUI_APPLICATION_CHANNEL = "1.5/edge"
 TLS_PROVIDER_NAME = "self-signed-certificates"
 TLS_PROVIDER_CHANNEL = "latest/stable"
 GRAFANA_AGENT_CHARM_NAME = "grafana-agent-k8s"
 GRAFANA_AGENT_CHARM_CHANNEL = "latest/stable"
 TIMEOUT = 15 * 60
-
-
-async def _deploy_mongodb(ops_test: OpsTest):
-    assert ops_test.model
-    await ops_test.model.deploy(
-        DB_APPLICATION_NAME,
-        application_name=DB_APPLICATION_NAME,
-        channel=DB_APPLICATION_CHANNEL,
-    )
-
-
-async def _deploy_nrf(ops_test: OpsTest):
-    assert ops_test.model
-    await ops_test.model.deploy(
-        NRF_APPLICATION_NAME,
-        application_name=NRF_APPLICATION_NAME,
-        channel=NRF_APPLICATION_CHANNEL,
-    )
-
-
-async def _deploy_tls_provider(ops_test: OpsTest):
-    assert ops_test.model
-    await ops_test.model.deploy(
-        TLS_PROVIDER_NAME,
-        application_name=TLS_PROVIDER_NAME,
-        channel=TLS_PROVIDER_CHANNEL,
-    )
-
-
-async def _deploy_grafana_agent(ops_test: OpsTest):
-    assert ops_test.model
-    await ops_test.model.deploy(
-        GRAFANA_AGENT_CHARM_NAME,
-        application_name=GRAFANA_AGENT_CHARM_NAME,
-        channel=GRAFANA_AGENT_CHARM_CHANNEL,
-    )
 
 
 @pytest.fixture(scope="module")
@@ -71,6 +37,7 @@ async def deploy(ops_test: OpsTest, request):
     assert ops_test.model
     await _deploy_mongodb(ops_test)
     await _deploy_nrf(ops_test)
+    await _deploy_webui(ops_test)
     await _deploy_tls_provider(ops_test)
     await _deploy_grafana_agent(ops_test)
     charm = Path(request.config.getoption("--charm_path")).resolve()
@@ -91,6 +58,7 @@ async def deploy(ops_test: OpsTest, request):
 async def test_relate_and_wait_for_active_status(ops_test: OpsTest, deploy):
     assert ops_test.model
     await ops_test.model.integrate(relation1=APP_NAME, relation2=NRF_APPLICATION_NAME)
+    await ops_test.model.integrate(relation1=APP_NAME, relation2=WEBUI_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=APP_NAME, relation2=TLS_PROVIDER_NAME)
     await ops_test.model.integrate(relation1=APP_NAME, relation2=GRAFANA_AGENT_CHARM_NAME)
     await ops_test.model.wait_for_idle(
@@ -135,6 +103,21 @@ async def test_restore_tls_and_wait_for_active_status(ops_test: OpsTest, deploy)
 
 
 @pytest.mark.abort_on_fail
+async def test_remove_webui_and_wait_for_blocked_status(ops_test: OpsTest, deploy):
+    assert ops_test.model
+    await ops_test.model.remove_application(WEBUI_APPLICATION_NAME, block_until_done=True)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=TIMEOUT)
+
+
+@pytest.mark.abort_on_fail
+async def test_restore_webui_and_wait_for_active_status(ops_test: OpsTest, deploy):
+    assert ops_test.model
+    await _deploy_webui(ops_test)
+    await ops_test.model.integrate(relation1=APP_NAME, relation2=WEBUI_APPLICATION_NAME)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=TIMEOUT)
+
+
+@pytest.mark.abort_on_fail
 async def test_when_scale_app_beyond_1_then_only_one_unit_is_active(
     ops_test: OpsTest, deploy
 ):
@@ -150,3 +133,54 @@ async def test_when_scale_app_beyond_1_then_only_one_unit_is_active(
 async def test_remove_app(ops_test: OpsTest, deploy):
     assert ops_test.model
     await ops_test.model.remove_application(APP_NAME, block_until_done=True)
+
+
+async def _deploy_mongodb(ops_test: OpsTest):
+    assert ops_test.model
+    await ops_test.model.deploy(
+        DB_APPLICATION_NAME,
+        application_name=DB_APPLICATION_NAME,
+        channel=DB_APPLICATION_CHANNEL,
+    )
+
+
+async def _deploy_nrf(ops_test: OpsTest):
+    assert ops_test.model
+    await ops_test.model.deploy(
+        NRF_APPLICATION_NAME,
+        application_name=NRF_APPLICATION_NAME,
+        channel=NRF_APPLICATION_CHANNEL,
+    )
+
+
+async def _deploy_webui(ops_test: OpsTest):
+    assert ops_test.model
+    await ops_test.model.deploy(
+        WEBUI_APPLICATION_NAME,
+        application_name=WEBUI_APPLICATION_NAME,
+        channel=WEBUI_APPLICATION_CHANNEL,
+    )
+    await ops_test.model.integrate(
+        relation1=f"{WEBUI_APPLICATION_NAME}:common_database", relation2=f"{DB_APPLICATION_NAME}"
+    )
+    await ops_test.model.integrate(
+        relation1=f"{WEBUI_APPLICATION_NAME}:auth_database", relation2=f"{DB_APPLICATION_NAME}"
+    )
+
+
+async def _deploy_tls_provider(ops_test: OpsTest):
+    assert ops_test.model
+    await ops_test.model.deploy(
+        TLS_PROVIDER_NAME,
+        application_name=TLS_PROVIDER_NAME,
+        channel=TLS_PROVIDER_CHANNEL,
+    )
+
+
+async def _deploy_grafana_agent(ops_test: OpsTest):
+    assert ops_test.model
+    await ops_test.model.deploy(
+        GRAFANA_AGENT_CHARM_NAME,
+        application_name=GRAFANA_AGENT_CHARM_NAME,
+        channel=GRAFANA_AGENT_CHARM_CHANNEL,
+    )

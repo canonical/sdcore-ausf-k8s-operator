@@ -3,12 +3,9 @@
 
 from io import StringIO
 from pathlib import Path
-from typing import Generator
 from unittest.mock import Mock, patch
 
-import pytest
-from charm import AUSFOperatorCharm
-from ops import testing
+from fixtures import AUSFUnitTestFixtures
 
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 
@@ -20,69 +17,13 @@ TEST_CERTIFICATE = "whatever certificate"
 NAMESPACE = "whatever"
 
 
-class TestCharmWorkloadConfiguration:
-    patcher_check_output = patch("charm.check_output")
-    patcher_generate_csr = patch("charm.generate_csr")
-    patcher_generate_private_key = patch("charm.generate_private_key")
-    patcher_get_assigned_certificates = patch("charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates")  # noqa: E501
-    patcher_request_certificate_creation = patch("charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.request_certificate_creation")  # noqa: E501
-    patcher_restart = patch("ops.model.Container.restart")
-
-    @pytest.fixture()
-    def setup(self):
-        self.mock_check_output = TestCharmWorkloadConfiguration.patcher_check_output.start()
-        self.mock_generate_csr = TestCharmWorkloadConfiguration.patcher_generate_csr.start()
-        self.mock_generate_private_key = TestCharmWorkloadConfiguration.patcher_generate_private_key.start()  # noqa: E501
-        self.mock_get_assigned_certificates = TestCharmWorkloadConfiguration.patcher_get_assigned_certificates.start()  # noqa: E501
-        self.mock_request_certificate_creation = TestCharmWorkloadConfiguration.patcher_request_certificate_creation.start()  # noqa: E501
-        self.mock_restart = TestCharmWorkloadConfiguration.patcher_restart.start()
-
-    @staticmethod
-    def teardown() -> None:
-        patch.stopall()
-
-    @pytest.fixture(autouse=True)
-    def create_harness(self, setup, request):
-        self.harness = testing.Harness(AUSFOperatorCharm)
-        self.harness.set_model_name(name=NAMESPACE)
-        self.harness.set_leader(is_leader=True)
-        self.harness.begin()
-        yield self.harness
-        self.harness.cleanup()
-        request.addfinalizer(self.teardown)
-
-    @pytest.fixture()
-    def add_storage(self):
-        self.harness.add_storage(storage_name="certs", attach=True)
-        self.harness.add_storage(storage_name="config", attach=True)
-
-    @pytest.fixture()
-    def create_nrf_relation_and_set_nrf_url(self, fiveg_nrf_relation_id):
-        self.harness.add_relation_unit(
-            relation_id=fiveg_nrf_relation_id, remote_unit_name="whatever-nrf/0"
-        )
-        self.harness.update_relation_data(
-            relation_id=fiveg_nrf_relation_id,
-            app_or_unit="whatever-nrf",
-            key_values={"url": "https://nrf-example.com:1234"},
-        )
-
-    @pytest.fixture()
-    def fiveg_nrf_relation_id(self) -> Generator[int, None, None]:
-        yield self.harness.add_relation(
-            relation_name="fiveg_nrf",
-            remote_app="whatever-nrf",
-        )
-
-    @pytest.fixture()
-    def certificates_relation_id(self) -> Generator[int, None, None]:
-        yield self.harness.add_relation(
-            relation_name="certificates",
-            remote_app="whatever",
-        )
-
+class TestCharmWorkloadConfiguration(AUSFUnitTestFixtures):
     def test_given_charm_workload_is_ready_to_configure_and_private_key_is_not_stored_when_update_status_then_private_key_is_generated_and_stored_in_the_container(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -96,7 +37,11 @@ class TestCharmWorkloadConfiguration:
         assert (root / "support/TLS/ausf.key").read_text() == TEST_PRIVATE_KEY.decode()
 
     def test_given_charm_workload_is_ready_to_configure_and_private_key_is_stored_but_csr_is_not_stored_when_update_status_then_csr_is_generated_and_stored_in_the_container(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -116,7 +61,11 @@ class TestCharmWorkloadConfiguration:
         assert (root / "support/TLS/ausf.csr").read_text() == TEST_CSR.decode()
 
     def test_given_charm_workload_is_ready_to_configure_and_private_key_is_stored_but_csr_is_not_stored_when_update_status_then_new_certificate_is_requested(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -129,7 +78,11 @@ class TestCharmWorkloadConfiguration:
         self.mock_request_certificate_creation.assert_called_once()
 
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_needs_updating_when_update_status_then_new_provider_certificate_is_pushed_to_the_container(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -169,7 +122,11 @@ class TestCharmWorkloadConfiguration:
         assert (root / "support/TLS/ausf.pem").lstat().st_mtime == certificate_file_creation_time
 
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_is_up_to_date_and_workload_config_needs_updating_when_update_status_then_new_workload_config_is_pushed_to_the_container(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -217,7 +174,11 @@ class TestCharmWorkloadConfiguration:
         assert (root / "free5gc/config/ausfcfg.conf").lstat().st_mtime == config_file_creation_time
 
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_and_workload_config_are_stored_when_update_status_then_pebble_layer_is_created(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -260,7 +221,11 @@ class TestCharmWorkloadConfiguration:
         assert expected_pebble_layer == actual_pebble_plan
 
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_has_changed_when_update_status_then_workload_service_is_restarted(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP
@@ -279,7 +244,11 @@ class TestCharmWorkloadConfiguration:
         self.mock_restart.assert_called_once()
 
     def test_given_charm_workload_is_ready_to_configure_and_workload_config_has_changed_when_update_status_then_workload_service_is_restarted(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, add_storage
+        self,
+        certificates_relation_id,
+        create_nrf_relation_and_set_nrf_url,
+        create_webui_relation_and_set_webui_url,
+        add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
         self.mock_check_output.return_value = TEST_POD_IP

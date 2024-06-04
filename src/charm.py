@@ -11,6 +11,9 @@ from typing import Optional
 
 from charms.loki_k8s.v1.loki_push_api import LogForwarder  # type: ignore[import]
 from charms.sdcore_nrf_k8s.v0.fiveg_nrf import NRFRequires  # type: ignore[import]
+from charms.sdcore_webui_k8s.v0.sdcore_config import (  # type: ignore[import]
+    SdcoreConfigRequires,
+)
 from charms.tls_certificates_interface.v3.tls_certificates import (  # type: ignore[import]
     CertificateExpiringEvent,
     TLSCertificatesRequiresV3,
@@ -43,6 +46,9 @@ PRIVATE_KEY_NAME = "ausf.key"
 CSR_NAME = "ausf.csr"
 CERTIFICATE_NAME = "ausf.pem"
 CERTIFICATE_COMMON_NAME = "ausf.sdcore"
+NRF_RELATION_NAME = "fiveg_nrf"
+SDCORE_CONFIG_RELATION_NAME = "sdcore_config"
+TLS_RELATION_NAME = "certificates"
 LOGGING_RELATION_NAME = "logging"
 
 
@@ -61,14 +67,16 @@ class AUSFOperatorCharm(CharmBase):
             return
         self._container_name = self._service_name = "ausf"
         self._container = self.unit.get_container(self._container_name)
-        self._nrf_requires = NRFRequires(charm=self, relation_name="fiveg_nrf")
+        self._nrf_requires = NRFRequires(charm=self, relation_name=NRF_RELATION_NAME)
+        self._webui = SdcoreConfigRequires(charm=self, relation_name=SDCORE_CONFIG_RELATION_NAME)
         self.unit.set_ports(SBI_PORT)
-        self._certificates = TLSCertificatesRequiresV3(self, "certificates")
+        self._certificates = TLSCertificatesRequiresV3(self, TLS_RELATION_NAME)
         self._logging = LogForwarder(charm=self, relation_name=LOGGING_RELATION_NAME)
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)
         self.framework.observe(self.on.update_status, self._configure_ausf)
         self.framework.observe(self.on.fiveg_nrf_relation_joined, self._configure_ausf)
         self.framework.observe(self._nrf_requires.on.nrf_available, self._configure_ausf)
+        self.framework.observe(self._webui.on.webui_url_available, self._configure_ausf)
         self.framework.observe(self.on.certificates_relation_joined, self._configure_ausf)
         self.framework.observe(
             self.on.certificates_relation_broken, self._on_certificates_relation_broken
@@ -77,6 +85,40 @@ class AUSFOperatorCharm(CharmBase):
         self.framework.observe(
             self._certificates.on.certificate_expiring, self._on_certificate_expiring
         )
+
+    def _configure_ausf(self, _: EventBase) -> None:
+        """Handle Juju events.
+
+        This event handler is called for every event that affects the charm state
+        (ex. configuration files, relation data). This method performs a couple of checks
+        to make sure that the workload is ready to be started. Then, it generates a configuration
+        for the AUSF workload and runs the Pebble services.
+        """
+        if not self.ready_to_configure():
+            logger.info("The preconditions for the configuration are not met yet.")
+            return
+
+        if not self._private_key_is_stored():
+            self._generate_private_key()
+
+        if not self._csr_is_stored():
+            self._request_new_certificate()
+
+        provider_certificate = self._get_current_provider_certificate()
+        if not provider_certificate:
+            return
+
+        if certificate_update_required := self._is_certificate_update_required(
+            provider_certificate
+        ):
+            self._store_certificate(certificate=provider_certificate)
+
+        desired_config_file = self._generate_ausf_config_file()
+        if config_update_required := self._is_config_update_required(desired_config_file):
+            self._push_config_file(content=desired_config_file)
+
+        should_restart = config_update_required or certificate_update_required
+        self._configure_pebble(restart=should_restart)
 
     def _on_collect_unit_status(self, event: CollectStatusEvent):
         """Check the unit status and set to Unit when CollectStatusEvent is fired.
@@ -99,15 +141,21 @@ class AUSFOperatorCharm(CharmBase):
             logger.info("Waiting for container to start")
             return
 
-        for relation in ["fiveg_nrf", "certificates"]:
-            if not self._relation_created(relation):
-                event.add_status(BlockedStatus(f"Waiting for {relation} relation"))
-                logger.info("Waiting for %s  relation", relation)
-                return
+        if missing_relations := self._missing_relations():
+            event.add_status(
+                BlockedStatus(f"Waiting for {', '.join(missing_relations)} relation(s)")
+            )
+            logger.info("Waiting for %s  relation", ', '.join(missing_relations))
+            return
 
         if not self._nrf_data_is_available:
             event.add_status(WaitingStatus("Waiting for NRF data to be available"))
             logger.info("Waiting for NRF data to be available")
+            return
+
+        if not self._webui_data_is_available:
+            event.add_status(WaitingStatus("Waiting for Webui data to be available"))
+            logger.info("Waiting for Webui data to be available")
             return
 
         if not self._container.exists(path=CONFIG_DIR):
@@ -154,56 +202,17 @@ class AUSFOperatorCharm(CharmBase):
         """
         if not self._container.can_connect():
             return False
-
-        for relation in ["fiveg_nrf", "certificates"]:
-            if not self._relation_created(relation):
-                return False
-
+        if self._missing_relations():
+            return False
         if not self._nrf_data_is_available:
             return False
-
+        if not self._webui_data_is_available:
+            return False
         if not self._container.exists(path=CONFIG_DIR):
             return False
-
         if not _get_pod_ip():
             return False
-
         return True
-
-    def _configure_ausf(
-        self,
-        _: EventBase,
-    ) -> None:
-        """Configure AUSF configuration file and pebble service.
-
-        Args:
-            _ (EventBase): Juju event
-        """
-        if not self.ready_to_configure():
-            logger.info("The preconditions for the configuration are not met yet.")
-            return
-
-        if not self._private_key_is_stored():
-            self._generate_private_key()
-
-        if not self._csr_is_stored():
-            self._request_new_certificate()
-
-        provider_certificate = self._get_current_provider_certificate()
-        if not provider_certificate:
-            return
-
-        if certificate_update_required := self._is_certificate_update_required(
-            provider_certificate
-        ):
-            self._store_certificate(certificate=provider_certificate)
-
-        desired_config_file = self._generate_ausf_config_file()
-        if config_update_required := self._is_config_update_required(desired_config_file):
-            self._push_config_file(content=desired_config_file)
-
-        should_restart = config_update_required or certificate_update_required
-        self._configure_pebble(restart=should_restart)
 
     def _generate_ausf_config_file(self) -> str:
         """Handle creation of the AUSF config file based on a given template.
@@ -215,6 +224,7 @@ class AUSFOperatorCharm(CharmBase):
             ausf_group_id=AUSF_GROUP_ID,
             ausf_ip=_get_pod_ip(),  # type: ignore[arg-type]
             nrf_url=self._nrf_requires.nrf_url,
+            webui_url=self._webui.webui_url,
             sbi_port=SBI_PORT,
             scheme="https",
         )
@@ -376,6 +386,7 @@ class AUSFOperatorCharm(CharmBase):
         ausf_ip: str,
         sbi_port: int,
         nrf_url: str,
+        webui_url: str,
         scheme: str,
     ):
         """Render the AUSF config file.
@@ -384,6 +395,7 @@ class AUSFOperatorCharm(CharmBase):
             ausf_group_id (str): Group ID of the AUSF.
             ausf_ip (str): IP of the AUSF.
             nrf_url (str): URL of the NRF.
+            webui_url (str): URL of the Webui.
             sbi_port (int): AUSF SBi port.
             scheme (str): SBI Interface scheme ("http" or "https")
         """
@@ -393,6 +405,7 @@ class AUSFOperatorCharm(CharmBase):
             ausf_group_id=ausf_group_id,
             ausf_ip=ausf_ip,
             nrf_url=nrf_url,
+            webui_url=webui_url,
             sbi_port=sbi_port,
             scheme=scheme,
         )
@@ -444,6 +457,13 @@ class AUSFOperatorCharm(CharmBase):
             self._container.restart(self._service_name)
             logger.info("Restarted container %s", self._service_name)
             return
+
+    def _missing_relations(self) -> list:
+        missing_relations = []
+        for relation in [NRF_RELATION_NAME, SDCORE_CONFIG_RELATION_NAME, TLS_RELATION_NAME]:
+            if not self._relation_created(relation):
+                missing_relations.append(relation)
+        return missing_relations
 
     def _relation_created(self, relation_name: str) -> bool:
         """Return True if the relation is created, False otherwise.
@@ -501,6 +521,10 @@ class AUSFOperatorCharm(CharmBase):
             bool: Whether the NRF data is available.
         """
         return bool(self._nrf_requires.nrf_url)
+
+    @property
+    def _webui_data_is_available(self) -> bool:
+        return bool(self._webui.webui_url)
 
 
 def _get_pod_ip() -> Optional[str]:

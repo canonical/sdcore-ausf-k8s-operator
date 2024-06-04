@@ -13,6 +13,11 @@ output "fiveg_nrf_endpoint" {
   value       = "fiveg_nrf"
 }
 
+output "sdcore_config_endpoint" {
+  description = "Name of the endpoint used to integrate with the Webui."
+  value       = "sdcore_config"
+}
+
 output "certificates_endpoint" {
   description = "Name of the endpoint used to integrate with the TLS certificates provider."
   value       = "certificates"

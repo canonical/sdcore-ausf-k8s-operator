@@ -458,7 +458,7 @@ class AUSFOperatorCharm(CharmBase):
             logger.info("Restarted container %s", self._service_name)
             return
 
-    def _missing_relations(self) -> list:
+    def _missing_relations(self) -> List[str]:
         missing_relations = []
         for relation in [NRF_RELATION_NAME, SDCORE_CONFIG_RELATION_NAME, TLS_RELATION_NAME]:
             if not self._relation_created(relation):

@@ -22,4 +22,4 @@ juju integrate sdcore-ausf-k8s:sdcore_config sdcore-webui-k8s:sdcore-config
 
 ## Image
 
-- **ausf**: `ghcr.io/canonical/sdcore-ausf:1.4.0`
+- **ausf**: `ghcr.io/canonical/sdcore-ausf:1.4.1`

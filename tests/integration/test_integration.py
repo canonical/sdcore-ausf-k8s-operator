@@ -52,6 +52,10 @@ async def deploy(ops_test: OpsTest, request):
     )
     await ops_test.model.integrate(relation1=DB_APPLICATION_NAME, relation2=NRF_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
+    await ops_test.model.integrate(
+        relation1=NRF_APPLICATION_NAME,
+        relation2=WEBUI_APPLICATION_NAME,
+    )
 
 
 @pytest.mark.abort_on_fail
@@ -83,6 +87,10 @@ async def test_restore_nrf_and_wait_for_active_status(ops_test: OpsTest, deploy)
         relation1=f"{NRF_APPLICATION_NAME}:database", relation2=DB_APPLICATION_NAME
     )
     await ops_test.model.integrate(relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
+    await ops_test.model.integrate(
+        relation1=NRF_APPLICATION_NAME,
+        relation2=WEBUI_APPLICATION_NAME,
+    )
     await ops_test.model.integrate(relation1=APP_NAME, relation2=NRF_APPLICATION_NAME)
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=TIMEOUT)
 

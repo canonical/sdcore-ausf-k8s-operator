@@ -27,3 +27,10 @@ output "logging_endpoint" {
   description = "Name of the endpoint used to integrate with the Logging provider."
   value       = "logging"
 }
+
+# Provided integration endpoints
+
+output "metrics_endpoint" {
+  description = "Exposes the Prometheus metrics endpoint providing telemetry about the AUSF instance."
+  value       = "metrics-endpoint"
+}

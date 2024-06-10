@@ -64,7 +64,10 @@ async def test_relate_and_wait_for_active_status(ops_test: OpsTest, deploy):
     await ops_test.model.integrate(relation1=APP_NAME, relation2=NRF_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=APP_NAME, relation2=WEBUI_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=APP_NAME, relation2=TLS_PROVIDER_NAME)
-    await ops_test.model.integrate(relation1=APP_NAME, relation2=GRAFANA_AGENT_CHARM_NAME)
+    await ops_test.model.integrate(
+        relation1=f"{APP_NAME}:logging",
+        relation2=f"{GRAFANA_AGENT_CHARM_NAME}:logging-provider"
+    )
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME],
         status="active",

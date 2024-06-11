@@ -10,6 +10,9 @@ from subprocess import check_output
 from typing import List, Optional
 
 from charms.loki_k8s.v1.loki_push_api import LogForwarder  # type: ignore[import]
+from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore[import]
+    MetricsEndpointProvider,
+)
 from charms.sdcore_nrf_k8s.v0.fiveg_nrf import NRFRequires  # type: ignore[import]
 from charms.sdcore_webui_k8s.v0.sdcore_config import (  # type: ignore[import]
     SdcoreConfigRequires,
@@ -50,6 +53,7 @@ NRF_RELATION_NAME = "fiveg_nrf"
 SDCORE_CONFIG_RELATION_NAME = "sdcore_config"
 TLS_RELATION_NAME = "certificates"
 LOGGING_RELATION_NAME = "logging"
+PROMETHEUS_PORT = 8080
 
 
 class AUSFOperatorCharm(CharmBase):
@@ -69,7 +73,15 @@ class AUSFOperatorCharm(CharmBase):
         self._container = self.unit.get_container(self._container_name)
         self._nrf_requires = NRFRequires(charm=self, relation_name=NRF_RELATION_NAME)
         self._webui = SdcoreConfigRequires(charm=self, relation_name=SDCORE_CONFIG_RELATION_NAME)
-        self.unit.set_ports(SBI_PORT)
+        self._metrics_endpoint = MetricsEndpointProvider(
+            self,
+            jobs=[
+                {
+                    "static_configs": [{"targets": [f"*:{PROMETHEUS_PORT}"]}],
+                }
+            ],
+        )
+        self.unit.set_ports(SBI_PORT, PROMETHEUS_PORT)
         self._certificates = TLSCertificatesRequiresV3(self, TLS_RELATION_NAME)
         self._logging = LogForwarder(charm=self, relation_name=LOGGING_RELATION_NAME)
         self.framework.observe(self.on.ausf_pebble_ready, self._configure_ausf)

@@ -38,6 +38,10 @@ assumes:
   - k8s-api
   - juju >= 3.4
 
+provides:
+  metrics-endpoint:
+    interface: prometheus_scrape
+
 requires:
   fiveg_nrf:
     interface: fiveg_nrf

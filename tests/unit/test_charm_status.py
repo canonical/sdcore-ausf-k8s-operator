@@ -1,6 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import os
 from unittest.mock import Mock
 
 from fixtures import AUSFUnitTestFixtures
@@ -23,15 +24,21 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        assert self.harness.model.unit.status == BlockedStatus("Scaling is not implemented for this charm")  # noqa: E501
+        assert self.harness.model.unit.status == BlockedStatus(
+            "Scaling is not implemented for this charm"
+        )
 
-    def test_given_unit_is_leader_but_container_is_not_ready_when_update_status_then_status_is_waiting(self):  # noqa: E501
+    def test_given_unit_is_leader_but_container_is_not_ready_when_update_status_then_status_is_waiting(  # noqa: E501
+        self,
+    ):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == WaitingStatus("Waiting for container to start")
 
-    def test_given_unit_is_leader_and_container_is_ready_but_relations_are_not_created_when_update_status_then_status_is_blocked(self):  # noqa: E501
+    def test_given_unit_is_leader_and_container_is_ready_but_relations_are_not_created_when_update_status_then_status_is_blocked(  # noqa: E501
+        self,
+    ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
 
         self.harness.charm.on.update_status.emit()
@@ -85,7 +92,9 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        assert self.harness.model.unit.status == WaitingStatus("Waiting for NRF data to be available")  # noqa: E501
+        assert self.harness.model.unit.status == WaitingStatus(
+            "Waiting for NRF data to be available"
+        )
 
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_but_webui_data_is_not_available_when_update_status_then_status_is_waiting(  # noqa: E501
         self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, webui_relation_id
@@ -95,7 +104,9 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        assert self.harness.model.unit.status == WaitingStatus("Waiting for Webui data to be available")  # noqa: E501
+        assert self.harness.model.unit.status == WaitingStatus(
+            "Waiting for Webui data to be available"
+        )
 
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_but_storage_is_not_ready_when_update_status_then_status_is_waiting(  # noqa: E501
         self,
@@ -108,7 +119,9 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        assert self.harness.model.unit.status == WaitingStatus("Waiting for storage to be attached")  # noqa: E501
+        assert self.harness.model.unit.status == WaitingStatus(
+            "Waiting for storage to be attached"
+        )
 
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_but_pod_ip_is_not_available_when_update_status_then_status_is_waiting(  # noqa: E501
         self,
@@ -123,7 +136,9 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        assert self.harness.model.unit.status == WaitingStatus("Waiting for pod IP address to be available")  # noqa: E501
+        assert self.harness.model.unit.status == WaitingStatus(
+            "Waiting for pod IP address to be available"
+        )
 
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_but_csr_is_not_stored_when_update_status_then_status_is_waiting(  # noqa: E501
         self,
@@ -140,7 +155,9 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.charm.on.update_status.emit()
         self.harness.evaluate_status()
 
-        assert self.harness.model.unit.status == WaitingStatus("Waiting for certificates to be stored")  # noqa: E501
+        assert self.harness.model.unit.status == WaitingStatus(
+            "Waiting for certificates to be stored"
+        )
 
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_and_csr_is_stored_but_ausf_service_is_not_running_when_update_status_then_status_is_waiting(  # noqa: E501
         self,
@@ -190,3 +207,23 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == ActiveStatus()
+
+    def test_given_no_workload_version_file_when_pebble_ready_then_workload_version_not_set(
+        self,
+    ):
+        self.harness.container_pebble_ready(container_name=CONTAINER_NAME)
+        self.harness.evaluate_status()
+        version = self.harness.get_workload_version()
+        assert version == ""
+
+    def test_given_workload_version_file_when_pebble_ready_then_workload_version_set(
+        self,
+    ):
+        expected_version = "1.2.3"
+        root = self.harness.get_filesystem_root(CONTAINER_NAME)
+        os.mkdir(f"{root}/etc")
+        (root / "etc/workload-version").write_text(expected_version)
+        self.harness.container_pebble_ready(container_name=CONTAINER_NAME)
+        self.harness.evaluate_status()
+        version = self.harness.get_workload_version()
+        assert version == expected_version

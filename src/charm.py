@@ -54,6 +54,7 @@ SDCORE_CONFIG_RELATION_NAME = "sdcore_config"
 TLS_RELATION_NAME = "certificates"
 LOGGING_RELATION_NAME = "logging"
 PROMETHEUS_PORT = 8080
+WORKLOAD_VERSION_FILE_NAME = "/etc/workload-version"
 
 
 class AUSFOperatorCharm(CharmBase):
@@ -154,11 +155,13 @@ class AUSFOperatorCharm(CharmBase):
             logger.info("Waiting for container to start")
             return
 
+        self.unit.set_workload_version(self._get_workload_version())
+
         if missing_relations := self._missing_relations():
             event.add_status(
                 BlockedStatus(f"Waiting for {', '.join(missing_relations)} relation(s)")
             )
-            logger.info("Waiting for %s  relation", ', '.join(missing_relations))
+            logger.info("Waiting for %s  relation", ", ".join(missing_relations))
             return
 
         if not self._nrf_data_is_available:
@@ -392,6 +395,24 @@ class AUSFOperatorCharm(CharmBase):
         self._container.push(path=f"{CERTS_DIR_PATH}/{CSR_NAME}", source=csr.decode().strip())
         logger.info("Pushed CSR to workload")
 
+    def _get_workload_version(self) -> str:
+        """Return the workload version.
+
+        Checks for the presence of /etc/workload-version file
+        and if present, returns the contents of that file. If
+        the file is not present, an empty string is returned.
+
+        Returns:
+            string: A human readable string representing the
+            version of the workload
+        """
+        if self._container.exists(path=f"{WORKLOAD_VERSION_FILE_NAME}"):
+            version_file_content = self._container.pull(
+                path=f"{WORKLOAD_VERSION_FILE_NAME}"
+            ).read()
+            return version_file_content
+        return ""
+
     @staticmethod
     def _render_config_file(
         *,
@@ -461,9 +482,7 @@ class AUSFOperatorCharm(CharmBase):
         """
         plan = self._container.get_plan()
         if plan.services != self._pebble_layer.services:
-            self._container.add_layer(
-                self._container_name, self._pebble_layer, combine=True
-            )
+            self._container.add_layer(self._container_name, self._pebble_layer, combine=True)
             self._container.replan()
             logger.info("New layer added: %s", self._pebble_layer)
         if restart:

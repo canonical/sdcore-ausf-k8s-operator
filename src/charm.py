@@ -13,10 +13,10 @@ from charms.loki_k8s.v1.loki_push_api import LogForwarder  # type: ignore[import
 from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore[import]
     MetricsEndpointProvider,
 )
-from charms.sdcore_nrf_k8s.v0.fiveg_nrf import NRFRequires  # type: ignore[import]
-from charms.sdcore_webui_k8s.v0.sdcore_config import (  # type: ignore[import]
+from charms.sdcore_nms_k8s.v0.sdcore_config import (  # type: ignore[import]
     SdcoreConfigRequires,
 )
+from charms.sdcore_nrf_k8s.v0.fiveg_nrf import NRFRequires  # type: ignore[import]
 from charms.tls_certificates_interface.v3.tls_certificates import (  # type: ignore[import]
     CertificateExpiringEvent,
     TLSCertificatesRequiresV3,
@@ -50,7 +50,7 @@ CSR_NAME = "ausf.csr"
 CERTIFICATE_NAME = "ausf.pem"
 CERTIFICATE_COMMON_NAME = "ausf.sdcore"
 NRF_RELATION_NAME = "fiveg_nrf"
-SDCORE_CONFIG_RELATION_NAME = "sdcore_config"
+SDCORE_CONFIG_RELATION_NAME = "sdcore-config"
 TLS_RELATION_NAME = "certificates"
 LOGGING_RELATION_NAME = "logging"
 PROMETHEUS_PORT = 8080

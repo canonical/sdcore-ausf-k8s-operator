@@ -22,7 +22,7 @@ class TestCharmRelations(AUSFUnitTestFixtures):
         self,
         certificates_relation_id,
         create_nrf_relation_and_set_nrf_url,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
@@ -54,7 +54,7 @@ class TestCharmRelations(AUSFUnitTestFixtures):
         self,
         certificates_relation_id,
         create_nrf_relation_and_set_nrf_url,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         add_storage,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
@@ -83,7 +83,7 @@ class TestCharmRelations(AUSFUnitTestFixtures):
         self,
         certificates_relation_id,
         fiveg_nrf_relation_id,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         add_storage,
     ):
         self.harness.add_relation_unit(
@@ -127,15 +127,15 @@ class TestCharmRelations(AUSFUnitTestFixtures):
         self,
         certificates_relation_id,
         create_nrf_relation_and_set_nrf_url,
-        webui_relation_id,
+        nms_relation_id,
         add_storage,
     ):
         self.harness.add_relation_unit(
-            relation_id=webui_relation_id, remote_unit_name="whatever-webui/0"
+            relation_id=nms_relation_id, remote_unit_name="whatever-nms/0"
         )
         self.harness.update_relation_data(
-            relation_id=webui_relation_id,
-            app_or_unit="whatever-webui",
+            relation_id=nms_relation_id,
+            app_or_unit="whatever-nms",
             key_values={"webui_url": TEST_WEBUI_URL},
         )
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
@@ -156,8 +156,8 @@ class TestCharmRelations(AUSFUnitTestFixtures):
 
         new_webui_url = "new-webui-url:1234"
         self.harness.update_relation_data(
-            relation_id=webui_relation_id,
-            app_or_unit="whatever-webui",
+            relation_id=nms_relation_id,
+            app_or_unit="whatever-nms",
             key_values={"webui_url": new_webui_url},
         )
 

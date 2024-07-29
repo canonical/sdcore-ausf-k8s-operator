@@ -45,7 +45,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == BlockedStatus(
-            "Waiting for fiveg_nrf, sdcore_config, certificates relation(s)"
+            "Waiting for fiveg_nrf, sdcore-config, certificates relation(s)"
         )
 
     def test_given_unit_is_leader_and_container_is_ready_but_fiveg_nrf_relation_is_not_created_when_update_status_then_status_is_blocked(  # noqa: E501
@@ -57,7 +57,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == BlockedStatus(
-            "Waiting for fiveg_nrf, sdcore_config relation(s)"
+            "Waiting for fiveg_nrf, sdcore-config relation(s)"
         )
 
     def test_given_unit_is_leader_and_container_is_ready_but_sdcore_config_relation_is_not_created_when_update_status_then_status_is_blocked(  # noqa: E501
@@ -69,11 +69,11 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == BlockedStatus(
-            "Waiting for sdcore_config relation(s)"
+            "Waiting for sdcore-config relation(s)"
         )
 
     def test_given_unit_is_leader_and_container_is_ready_but_certificates_relation_is_not_created_when_update_status_then_status_is_blocked(  # noqa: E501
-        self, fiveg_nrf_relation_id, webui_relation_id
+        self, fiveg_nrf_relation_id, nms_relation_id
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
 
@@ -85,7 +85,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         )
 
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_but_nrf_data_is_not_available_when_update_status_then_status_is_waiting(  # noqa: E501
-        self, certificates_relation_id, fiveg_nrf_relation_id, webui_relation_id
+        self, certificates_relation_id, fiveg_nrf_relation_id, nms_relation_id
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
 
@@ -97,7 +97,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         )
 
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_but_webui_data_is_not_available_when_update_status_then_status_is_waiting(  # noqa: E501
-        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, webui_relation_id
+        self, certificates_relation_id, create_nrf_relation_and_set_nrf_url, nms_relation_id
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
 
@@ -111,7 +111,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_but_storage_is_not_ready_when_update_status_then_status_is_waiting(  # noqa: E501
         self,
         create_nrf_relation_and_set_nrf_url,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         certificates_relation_id,
     ):
         self.harness.set_can_connect(container=CONTAINER_NAME, val=True)
@@ -127,7 +127,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self,
         add_storage,
         create_nrf_relation_and_set_nrf_url,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         certificates_relation_id,
     ):
         self.mock_check_output.return_value = b""
@@ -143,7 +143,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_but_csr_is_not_stored_when_update_status_then_status_is_waiting(  # noqa: E501
         self,
         create_nrf_relation_and_set_nrf_url,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         certificates_relation_id,
         add_storage,
     ):
@@ -162,7 +162,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_and_csr_is_stored_but_ausf_service_is_not_running_when_update_status_then_status_is_waiting(  # noqa: E501
         self,
         create_nrf_relation_and_set_nrf_url,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         certificates_relation_id,
         add_storage,
     ):
@@ -187,7 +187,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_configured_correctly_when_update_status_then_status_is_active(
         self,
         create_nrf_relation_and_set_nrf_url,
-        create_webui_relation_and_set_webui_url,
+        create_nms_relation_and_set_webui_url,
         certificates_relation_id,
         add_storage,
     ):

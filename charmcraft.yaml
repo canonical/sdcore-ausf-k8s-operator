@@ -45,7 +45,7 @@ provides:
 requires:
   fiveg_nrf:
     interface: fiveg_nrf
-  sdcore_config:
+  sdcore-config:
     interface: sdcore_config
   certificates:
     interface: tls-certificates

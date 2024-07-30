@@ -83,7 +83,7 @@ class AUSFUnitTestFixtures:
     @pytest.fixture()
     def nms_relation_id(self) -> Generator[int, None, None]:
         yield self.harness.add_relation(
-            relation_name="sdcore-config",
+            relation_name="sdcore_config",
             remote_app="whatever-nms",
         )
 

@@ -15,7 +15,7 @@ output "fiveg_nrf_endpoint" {
 
 output "sdcore_config_endpoint" {
   description = "Name of the endpoint used to integrate with the NMS."
-  value       = "sdcore-config"
+  value       = "sdcore_config"
 }
 
 output "certificates_endpoint" {

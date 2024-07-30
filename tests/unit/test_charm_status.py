@@ -45,7 +45,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == BlockedStatus(
-            "Waiting for fiveg_nrf, sdcore-config, certificates relation(s)"
+            "Waiting for fiveg_nrf, sdcore_config, certificates relation(s)"
         )
 
     def test_given_unit_is_leader_and_container_is_ready_but_fiveg_nrf_relation_is_not_created_when_update_status_then_status_is_blocked(  # noqa: E501
@@ -57,7 +57,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == BlockedStatus(
-            "Waiting for fiveg_nrf, sdcore-config relation(s)"
+            "Waiting for fiveg_nrf, sdcore_config relation(s)"
         )
 
     def test_given_unit_is_leader_and_container_is_ready_but_sdcore_config_relation_is_not_created_when_update_status_then_status_is_blocked(  # noqa: E501
@@ -69,7 +69,7 @@ class TestCharmStatus(AUSFUnitTestFixtures):
         self.harness.evaluate_status()
 
         assert self.harness.model.unit.status == BlockedStatus(
-            "Waiting for sdcore-config relation(s)"
+            "Waiting for sdcore_config relation(s)"
         )
 
     def test_given_unit_is_leader_and_container_is_ready_but_certificates_relation_is_not_created_when_update_status_then_status_is_blocked(  # noqa: E501

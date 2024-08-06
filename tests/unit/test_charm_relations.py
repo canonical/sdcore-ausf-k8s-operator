@@ -123,7 +123,7 @@ class TestCharmRelations(AUSFUnitTestFixtures):
 
             assert (root / "free5gc/config/ausfcfg.conf").read_text() == expected_config.replace(
                 TEST_NRF_URL, new_nrf_url
-            )  # noqa E501
+            )
 
     def test_given_charm_is_in_active_state_when_webui_url_available_then_ausf_config_is_updated(
         self,
@@ -169,4 +169,4 @@ class TestCharmRelations(AUSFUnitTestFixtures):
 
             assert (root / "free5gc/config/ausfcfg.conf").read_text() == expected_config.replace(
                 TEST_WEBUI_URL, new_webui_url
-            )  # noqa E501
+            )

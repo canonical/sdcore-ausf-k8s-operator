@@ -44,7 +44,7 @@ async def deploy(ops_test: OpsTest, request):
     resources = {
         "ausf-image": METADATA["resources"]["ausf-image"]["upstream-source"],
     }
-    await ops_test.model.deploy(  # type: ignore[union-attr]
+    await ops_test.model.deploy(
         charm,
         resources=resources,
         application_name=APP_NAME,

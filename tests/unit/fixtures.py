@@ -20,10 +20,10 @@ class AUSFUnitTestFixtures:
     patcher_get_service = patch("ops.model.Container.get_service")
     patcher_get_assigned_certificates = patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.get_assigned_certificates"
-    )  # noqa: E501
+    )
     patcher_request_certificate_creation = patch(
         "charms.tls_certificates_interface.v3.tls_certificates.TLSCertificatesRequiresV3.request_certificate_creation"
-    )  # noqa: E501
+    )
     patcher_restart = patch("ops.model.Container.restart")
 
     @pytest.fixture()
@@ -34,10 +34,10 @@ class AUSFUnitTestFixtures:
         self.mock_get_service = AUSFUnitTestFixtures.patcher_get_service.start()
         self.mock_get_assigned_certificates = (
             AUSFUnitTestFixtures.patcher_get_assigned_certificates.start()
-        )  # noqa: E501
+        )
         self.mock_request_certificate_creation = (
             AUSFUnitTestFixtures.patcher_request_certificate_creation.start()
-        )  # noqa: E501
+        )
         self.mock_restart = AUSFUnitTestFixtures.patcher_restart.start()
 
     @staticmethod

@@ -5,10 +5,10 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from fixtures import TEST_NRF_URL, TEST_WEBUI_URL, AUSFUnitTestFixtures
 from ops import ActiveStatus
 
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
+from tests.unit.fixtures import TEST_NRF_URL, TEST_WEBUI_URL, AUSFUnitTestFixtures
 
 CONTAINER_NAME = "ausf"
 TEST_POD_IP = b"1.2.3.4"

@@ -4,10 +4,10 @@
 import os
 from unittest.mock import Mock
 
-from fixtures import AUSFUnitTestFixtures
 from ops import ActiveStatus, BlockedStatus, ModelError, WaitingStatus
 
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
+from tests.unit.fixtures import AUSFUnitTestFixtures
 
 CONTAINER_NAME = "ausf"
 TEST_POD_IP = b"1.2.3.4"

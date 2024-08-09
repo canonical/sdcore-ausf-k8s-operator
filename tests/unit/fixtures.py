@@ -78,21 +78,21 @@ class AUSFUnitTestFixtures:
         )
 
     @pytest.fixture()
-    def create_webui_relation_and_set_webui_url(self, webui_relation_id):
+    def create_nms_relation_and_set_webui_url(self, nms_relation_id):
         self.harness.add_relation_unit(
-            relation_id=webui_relation_id, remote_unit_name="whatever-webui/0"
+            relation_id=nms_relation_id, remote_unit_name="whatever-nms/0"
         )
         self.harness.update_relation_data(
-            relation_id=webui_relation_id,
-            app_or_unit="whatever-webui",
+            relation_id=nms_relation_id,
+            app_or_unit="whatever-nms",
             key_values={"webui_url": TEST_WEBUI_URL},
         )
 
     @pytest.fixture()
-    def webui_relation_id(self) -> Generator[int, None, None]:
+    def nms_relation_id(self) -> Generator[int, None, None]:
         yield self.harness.add_relation(
             relation_name="sdcore_config",
-            remote_app="whatever-webui",
+            remote_app="whatever-nms",
         )
 
     @pytest.fixture()

@@ -5,9 +5,8 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from fixtures import AUSFUnitTestFixtures
-
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
+from tests.unit.fixtures import AUSFUnitTestFixtures
 
 CONTAINER_NAME = "ausf"
 TEST_POD_IP = b"1.2.3.4"

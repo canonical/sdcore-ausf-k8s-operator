@@ -5,10 +5,10 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from fixtures import TEST_NRF_URL, TEST_WEBUI_URL, AUSFUnitTestFixtures
 from ops import ActiveStatus
 
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
+from tests.unit.fixtures import TEST_NRF_URL, TEST_WEBUI_URL, AUSFUnitTestFixtures
 
 CONTAINER_NAME = "ausf"
 TEST_POD_IP = b"1.2.3.4"
@@ -121,7 +121,9 @@ class TestCharmRelations(AUSFUnitTestFixtures):
         with open(expected_config_file_path, "r") as expected_config_file:
             expected_config = expected_config_file.read()
 
-            assert (root / "free5gc/config/ausfcfg.conf").read_text() == expected_config.replace(TEST_NRF_URL, new_nrf_url)  # noqa E501
+            assert (root / "free5gc/config/ausfcfg.conf").read_text() == expected_config.replace(
+                TEST_NRF_URL, new_nrf_url
+            )
 
     def test_given_charm_is_in_active_state_when_webui_url_available_then_ausf_config_is_updated(
         self,
@@ -165,4 +167,6 @@ class TestCharmRelations(AUSFUnitTestFixtures):
         with open(expected_config_file_path, "r") as expected_config_file:
             expected_config = expected_config_file.read()
 
-            assert (root / "free5gc/config/ausfcfg.conf").read_text() == expected_config.replace(TEST_WEBUI_URL, new_webui_url)  # noqa E501
+            assert (root / "free5gc/config/ausfcfg.conf").read_text() == expected_config.replace(
+                TEST_WEBUI_URL, new_webui_url
+            )

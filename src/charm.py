@@ -324,6 +324,7 @@ class AUSFOperatorCharm(CharmBase):
     def _generate_private_key(self) -> None:
         """Generate and stores private key."""
         private_key = generate_private_key()
+        print("Private key: ", private_key)
         self._store_private_key(private_key)
 
     def _request_new_certificate(self) -> None:

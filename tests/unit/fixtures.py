@@ -4,6 +4,9 @@
 from unittest.mock import patch
 
 import pytest
+import scenario
+
+from charm import AUSFOperatorCharm
 
 
 class AUSFUnitTestFixtures:
@@ -36,3 +39,9 @@ class AUSFUnitTestFixtures:
     @staticmethod
     def teardown() -> None:
         patch.stopall()
+
+    @pytest.fixture(autouse=True)
+    def context(self):
+        self.ctx = scenario.Context(
+            charm_type=AUSFOperatorCharm,
+        )

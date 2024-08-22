@@ -6,11 +6,9 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock
 
-import pytest
 import scenario
 from ops.pebble import Layer
 
-from charm import AUSFOperatorCharm
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 from tests.unit.fixtures import AUSFUnitTestFixtures
 
@@ -24,12 +22,6 @@ TEST_WEBUI_URL = "some-webui:7890"
 
 
 class TestCharmConfigure(AUSFUnitTestFixtures):
-    @pytest.fixture(autouse=True)
-    def context(self):
-        self.ctx = scenario.Context(
-            charm_type=AUSFOperatorCharm,
-        )
-
     def test_given_charm_workload_is_ready_to_configure_and_private_key_is_not_stored_when_update_status_then_private_key_is_generated_and_stored_in_the_container(  # noqa: E501
         self,
     ):

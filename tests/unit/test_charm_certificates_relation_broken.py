@@ -5,10 +5,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock
 
-import pytest
 import scenario
 
-from charm import AUSFOperatorCharm
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 from tests.unit.fixtures import AUSFUnitTestFixtures
 
@@ -21,12 +19,6 @@ TEST_NRF_URL = "https://nrf-example.com:1234"
 
 
 class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
-    @pytest.fixture(autouse=True)
-    def context(self):
-        self.ctx = scenario.Context(
-            charm_type=AUSFOperatorCharm,
-        )
-
     def test_given_charm_is_in_active_state_when_certificates_relation_broken_then_certificate_csr_and_private_key_are_removed(  # noqa: E501
         self,
     ):

@@ -4,12 +4,10 @@
 import tempfile
 from unittest.mock import Mock
 
-import pytest
 import scenario
 from ops import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer, ServiceStatus
 
-from charm import AUSFOperatorCharm
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 from tests.unit.fixtures import AUSFUnitTestFixtures
 
@@ -22,12 +20,6 @@ TEST_NRF_URL = "https://nrf-example.com:1234"
 
 
 class TestCharmCollectStatus(AUSFUnitTestFixtures):
-    @pytest.fixture(autouse=True)
-    def context(self):
-        self.ctx = scenario.Context(
-            charm_type=AUSFOperatorCharm,
-        )
-
     def test_given_unit_is_not_leader_when_collect_unit_status_then_status_is_blocked(self):
         container = scenario.Container(
             name=CONTAINER_NAME,

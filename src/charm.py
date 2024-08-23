@@ -193,7 +193,8 @@ class AUSFOperatorCharm(CharmBase):
         )
         return bool(cert and key)
 
-    def _get_certificate_request(self) -> CertificateRequest:
+    @staticmethod
+    def _get_certificate_request() -> CertificateRequest:
         return CertificateRequest(
             common_name=CERTIFICATE_COMMON_NAME,
             sans_dns=frozenset([CERTIFICATE_COMMON_NAME]),

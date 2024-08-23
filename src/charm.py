@@ -355,7 +355,7 @@ class AUSFOperatorCharm(CharmBase):
     def _store_certificate(self, certificate: Certificate) -> None:
         """Store certificate in workload."""
         self._container.push(path=f"{CERTS_DIR_PATH}/{CERTIFICATE_NAME}", source=str(certificate))
-        logger.info("Pushed certificate pushed to workload")
+        logger.info("Pushed certificate to workload")
 
     def _store_private_key(self, private_key: PrivateKey) -> None:
         """Store private key in workload."""

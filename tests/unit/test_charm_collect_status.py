@@ -2,20 +2,18 @@
 # See LICENSE file for licensing details.
 
 import tempfile
-from unittest.mock import Mock
 
 import scenario
 from ops import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer, ServiceStatus
 
-from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
+from tests.unit.certificates_helpers import (
+    example_cert_and_key,
+)
 from tests.unit.fixtures import AUSFUnitTestFixtures
 
 CONTAINER_NAME = "ausf"
 TEST_POD_IP = b"1.2.3.4"
-TEST_CSR = b"whatever csr"
-TEST_PRIVATE_KEY = b"whatever private key"
-TEST_CERTIFICATE = "whatever certificate"
 TEST_NRF_URL = "https://nrf-example.com:1234"
 
 
@@ -274,7 +272,7 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 "Waiting for pod IP address to be available"
             )
 
-    def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_but_csr_is_not_stored_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
+    def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -310,17 +308,17 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 leader=True,
                 relations=[nrf_relation, nms_relation, certificates_relation],
             )
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
-            self.mock_generate_csr.return_value = TEST_CSR
-            self.mock_generate_private_key.return_value = TEST_PRIVATE_KEY
+
             self.mock_check_output.return_value = TEST_POD_IP
+            self.mock_get_assigned_certificate.return_value = None, None
 
             state_out = self.ctx.run("collect_unit_status", state_in)
 
-            assert state_out.unit_status == WaitingStatus("Waiting for certificates to be stored")
+            assert state_out.unit_status == WaitingStatus(
+                "Waiting for certificates to be available"
+            )
 
-    def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_and_csr_is_stored_but_ausf_service_is_not_running_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
+    def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_and_storage_is_ready_and_pod_ip_is_available_but_ausf_service_is_not_running_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -357,15 +355,10 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 relations=[nrf_relation, nms_relation, certificates_relation],
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            self.mock_generate_private_key.return_value = TEST_PRIVATE_KEY
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             state_out = self.ctx.run("collect_unit_status", state_in)
 
@@ -410,15 +403,10 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 relations=[nrf_relation, nms_relation, certificates_relation],
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            self.mock_generate_private_key.return_value = TEST_PRIVATE_KEY
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             state_out = self.ctx.run("collect_unit_status", state_in)
 

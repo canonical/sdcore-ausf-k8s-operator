@@ -4,25 +4,23 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock
 
 import scenario
 from ops.pebble import Layer
 
-from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
+from tests.unit.certificates_helpers import (
+    example_cert_and_key,
+)
 from tests.unit.fixtures import AUSFUnitTestFixtures
 
 CONTAINER_NAME = "ausf"
 TEST_POD_IP = b"1.2.3.4"
-TEST_PRIVATE_KEY = b"whatever private key"
-TEST_CSR = b"whatever csr"
-TEST_CERTIFICATE = "whatever certificate"
 TEST_NRF_URL = "https://nrf-example.com:1234"
 TEST_WEBUI_URL = "some-webui:7890"
 
 
 class TestCharmConfigure(AUSFUnitTestFixtures):
-    def test_given_charm_workload_is_ready_to_configure_and_private_key_is_not_stored_when_update_status_then_private_key_is_generated_and_stored_in_the_container(  # noqa: E501
+    def test_given_charm_workload_is_ready_to_configure_and_private_key_is_not_stored_when_update_status_then_private_key_is_stored_in_the_container(  # noqa: E501
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -59,114 +57,17 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            self.mock_generate_private_key.return_value = TEST_PRIVATE_KEY
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 
-            self.mock_generate_private_key.assert_called_once()
             with open(f"{tempdir}/ausf.key", "r") as f:
-                assert f.read() == TEST_PRIVATE_KEY.decode()
-
-    def test_given_charm_workload_is_ready_to_configure_and_private_key_is_stored_but_csr_is_not_stored_when_update_status_then_csr_is_generated_and_stored_in_the_container(  # noqa: E501
-        self,
-    ):
-        with tempfile.TemporaryDirectory() as tempdir:
-            certificates_relation = scenario.Relation(
-                endpoint="certificates",
-                interface="tls-certificates",
-            )
-            nrf_relation = scenario.Relation(
-                endpoint="fiveg_nrf",
-                interface="fiveg-nrf",
-                remote_app_data={"url": TEST_NRF_URL},
-            )
-            nms_relation = scenario.Relation(
-                endpoint="sdcore_config",
-                interface="sdcore-config",
-                remote_app_data={"webui_url": "whatever"},
-            )
-            certs_mount = scenario.Mount(
-                location="/support/TLS",
-                src=tempdir,
-            )
-            config_mount = scenario.Mount(
-                location="/free5gc/config",
-                src=tempdir,
-            )
-            container = scenario.Container(
-                name=CONTAINER_NAME,
-                can_connect=True,
-                mounts={"certs": certs_mount, "config": config_mount},
-            )
-            state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
-                leader=True,
-            )
-            self.mock_check_output.return_value = TEST_POD_IP
-            self.mock_generate_csr.return_value = TEST_CSR
-
-            with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
-
-            self.ctx.run("update_status", state_in)
-
-            self.mock_generate_csr.assert_called_once_with(
-                private_key=TEST_PRIVATE_KEY,
-                subject="ausf.sdcore",
-                sans_dns=["ausf.sdcore"],
-            )
-
-            with open(f"{tempdir}/ausf.csr", "r") as f:
-                assert f.read() == TEST_CSR.decode()
-
-    def test_given_charm_workload_is_ready_to_configure_and_private_key_is_stored_but_csr_is_not_stored_when_update_status_then_new_certificate_is_requested(  # noqa: E501
-        self,
-    ):
-        with tempfile.TemporaryDirectory() as tempdir:
-            certificates_relation = scenario.Relation(
-                endpoint="certificates",
-                interface="tls-certificates",
-            )
-            nrf_relation = scenario.Relation(
-                endpoint="fiveg_nrf",
-                interface="fiveg-nrf",
-                remote_app_data={"url": TEST_NRF_URL},
-            )
-            nms_relation = scenario.Relation(
-                endpoint="sdcore_config",
-                interface="sdcore-config",
-                remote_app_data={"webui_url": "whatever"},
-            )
-            certs_mount = scenario.Mount(
-                location="/support/TLS",
-                src=tempdir,
-            )
-            config_mount = scenario.Mount(
-                location="/free5gc/config",
-                src=tempdir,
-            )
-            container = scenario.Container(
-                name=CONTAINER_NAME,
-                can_connect=True,
-                mounts={"certs": certs_mount, "config": config_mount},
-            )
-            state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
-                leader=True,
-            )
-            self.mock_check_output.return_value = TEST_POD_IP
-            self.mock_generate_csr.return_value = TEST_CSR
-
-            with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
-
-            self.ctx.run("update_status", state_in)
-
-            self.mock_request_certificate_creation.assert_called_once()
+                assert f.read() == str(private_key)
+            with open(f"{tempdir}/ausf.pem", "r") as f:
+                assert f.read() == str(provider_certificate.certificate)
 
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_needs_updating_when_update_status_then_new_provider_certificate_is_pushed_to_the_container(  # noqa: E501
         self,
@@ -176,6 +77,9 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 endpoint="certificates",
                 interface="tls-certificates",
             )
+            initial_certificate, initial_private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             nrf_relation = scenario.Relation(
                 endpoint="fiveg_nrf",
                 interface="fiveg-nrf",
@@ -205,21 +109,21 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(initial_private_key))
+            with open(f"{tempdir}/ausf.pem", "w") as f:
+                f.write(str(initial_certificate.certificate))
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 
+            with open(f"{tempdir}/ausf.key", "r") as f:
+                assert f.read() == str(private_key)
             with open(f"{tempdir}/ausf.pem", "r") as f:
-                assert f.read() == TEST_CERTIFICATE
+                assert f.read() == str(provider_certificate.certificate)
 
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_is_up_to_date_when_update_status_then_new_provider_certificate_is_not_pushed_to_the_container(  # noqa: E501
         self,
@@ -234,6 +138,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 interface="fiveg-nrf",
                 remote_app_data={"url": TEST_NRF_URL},
             )
+            nms_relation = scenario.Relation(
+                endpoint="sdcore_config",
+                interface="sdcore-config",
+                remote_app_data={"webui_url": "whatever"},
+            )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
                 src=tempdir,
@@ -249,26 +158,27 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             state_in = scenario.State(
                 containers=[container],
-                relations=[certificates_relation, nrf_relation],
+                relations=[certificates_relation, nrf_relation, nms_relation],
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
+                f.write(str(provider_certificate.certificate))
+
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
             certificate_file_creation_time = Path(f"{tempdir}/ausf.pem").lstat().st_mtime
 
             self.ctx.run("update_status", state_in)
 
+            with open(f"{tempdir}/ausf.key", "r") as f:
+                assert f.read() == str(private_key)
+            with open(f"{tempdir}/ausf.pem", "r") as f:
+                assert f.read() == str(provider_certificate.certificate)
             assert Path(f"{tempdir}/ausf.pem").lstat().st_mtime == certificate_file_creation_time
 
     def test_given_charm_workload_is_ready_to_configure_and_provider_certificate_is_up_to_date_and_workload_config_needs_updating_when_update_status_then_new_workload_config_is_pushed_to_the_container(  # noqa: E501
@@ -308,18 +218,14 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
+                f.write(str(provider_certificate.certificate))
 
             self.ctx.run("update_status", state_in)
 
@@ -362,24 +268,20 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
+                f.write(str(provider_certificate.certificate))
             expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
             with open(expected_config_file_path, "r") as expected_config_file:
                 expected_config = expected_config_file.read()
             with open(f"{tempdir}/ausfcfg.conf", "w") as f:
                 f.write(expected_config)
             config_file_creation_time = Path(f"{tempdir}/ausfcfg.conf").lstat().st_mtime
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 
@@ -422,23 +324,20 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
+                f.write(str(provider_certificate.certificate))
             expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
             with open(expected_config_file_path, "r") as expected_config_file:
                 expected_config = expected_config_file.read()
             with open(f"{tempdir}/ausfcfg.conf", "w") as f:
                 f.write(expected_config)
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             state_out = self.ctx.run("update_status", state_in)
 
@@ -500,16 +399,10 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
-            with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 
@@ -552,18 +445,14 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+                f.write(str(provider_certificate.certificate))
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 
@@ -601,24 +490,20 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
+                f.write(str(provider_certificate.certificate))
 
             expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
             with open(expected_config_file_path, "r") as expected_config_file:
                 expected_config = expected_config_file.read()
             with open(f"{tempdir}/ausfcfg.conf", "w") as f:
                 f.write(expected_config)
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 
@@ -662,18 +547,14 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+                f.write(str(provider_certificate.certificate))
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 
@@ -722,18 +603,14 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
-            with open(f"{tempdir}/ausf.csr", "w") as f:
-                f.write(TEST_CSR.decode())
+            provider_certificate, private_key = example_cert_and_key(
+                tls_relation_id=certificates_relation.relation_id
+            )
             with open(f"{tempdir}/ausf.key", "w") as f:
-                f.write(TEST_PRIVATE_KEY.decode())
+                f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
-                f.write(TEST_CERTIFICATE)
-            provider_certificate = Mock(ProviderCertificate)
-            provider_certificate.certificate = TEST_CERTIFICATE
-            provider_certificate.csr = TEST_CSR.decode()
-            self.mock_get_assigned_certificates.return_value = [
-                provider_certificate,
-            ]
+                f.write(str(provider_certificate.certificate))
+            self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
             self.ctx.run("update_status", state_in)
 

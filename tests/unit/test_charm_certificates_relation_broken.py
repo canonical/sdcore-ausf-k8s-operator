@@ -17,7 +17,7 @@ TEST_NRF_URL = "https://nrf-example.com:1234"
 
 
 class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
-    def test_given_charm_is_in_active_state_when_certificates_relation_broken_then_certificate_csr_and_private_key_are_removed(  # noqa: E501
+    def test_given_charm_is_in_active_state_when_certificates_relation_broken_then_certificate_and_private_key_are_removed(  # noqa: E501
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:

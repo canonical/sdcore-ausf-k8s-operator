@@ -7,6 +7,8 @@ configuration:
     port: {{ sbi_port }}
     registerIPv4: {{ ausf_ip }}
     scheme: {{ scheme }}
+  enableNrfCaching: true
+  nrfCacheEvictionInterval: 900
   serviceNameList:
     - nausf-auth
 info:

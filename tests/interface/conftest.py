@@ -11,10 +11,6 @@ from charm import AUSFOperatorCharm
 @pytest.fixture
 def interface_tester(interface_tester: InterfaceTester):
     with tempfile.TemporaryDirectory() as tempdir:
-        certificates_relation = scenario.Relation(
-            endpoint="certificates",
-            interface="tls-certificates",
-        )
         certs_mount = scenario.Mount(
             location="/support/TLS",
             src=tempdir,
@@ -34,7 +30,6 @@ def interface_tester(interface_tester: InterfaceTester):
             charm_type=AUSFOperatorCharm,
             state_template=scenario.State(
                 leader=True,
-                relations=[certificates_relation],
                 containers=[container],
             ),
         )

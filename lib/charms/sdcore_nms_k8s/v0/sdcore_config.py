@@ -149,7 +149,7 @@ class SdcoreConfigProviderAppData(BaseModel):
 
 
 class ProviderSchema(DataBagSchema):
-    """The schema for the provider side of the sdcore-config interface."""
+    """The schema for the provider side of the sdcore_config interface."""
     app: SdcoreConfigProviderAppData
 
 

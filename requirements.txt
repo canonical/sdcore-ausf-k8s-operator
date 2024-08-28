@@ -18,12 +18,18 @@ cosl==0.0.23
     # via -r requirements.in
 cryptography==43.0.0
     # via -r requirements.in
+exceptiongroup==1.2.2
+    # via pytest
 iniconfig==2.0.0
     # via pytest
+jinja2==3.1.4
+    # via -r requirements.in
 jsonschema==4.23.0
     # via -r requirements.in
 jsonschema-specifications==2023.12.1
     # via jsonschema
+markupsafe==2.1.5
+    # via jinja2
 ops==2.15.0
     # via
     #   -r requirements.in
@@ -63,6 +69,8 @@ rpds-py==0.18.0
     #   referencing
 tenacity==9.0.0
     # via cosl
+tomli==2.0.1
+    # via pytest
 typer==0.7.0
     # via pytest-interface-tester
 typing-extensions==4.9.0

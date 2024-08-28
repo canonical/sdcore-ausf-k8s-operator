@@ -4,3 +4,4 @@ pytest-interface-tester
 jsonschema
 cryptography
 cosl
+jinja2

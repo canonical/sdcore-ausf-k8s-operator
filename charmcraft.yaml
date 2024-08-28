@@ -24,7 +24,7 @@ resources:
   ausf-image:
     type: oci-image
     description: OCI image for 5G ausf
-    upstream-source: ghcr.io/canonical/sdcore-ausf:1.4.1
+    upstream-source: ghcr.io/canonical/sdcore-ausf:1.4.2
 
 storage:
   config:

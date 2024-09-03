@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Tuple
 from unittest.mock import Mock, patch
 
-from charm import AUSFOperatorCharm
 from ops import ActiveStatus, testing
 
+from charm import AUSFOperatorCharm
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 
 TEST_NRF_URL = "https://nrf-example.com:1234"

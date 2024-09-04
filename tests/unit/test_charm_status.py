@@ -4,9 +4,9 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from charm import AUSFOperatorCharm
 from ops import ActiveStatus, BlockedStatus, ModelError, WaitingStatus, testing
 
+from charm import AUSFOperatorCharm
 from lib.charms.tls_certificates_interface.v3.tls_certificates import ProviderCertificate
 
 TEST_POD_IP = b"1.2.3.4"

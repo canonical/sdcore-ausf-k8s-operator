@@ -16,10 +16,8 @@ click==8.1.7
     # via typer
 cosl==0.0.23
     # via -r requirements.in
-cryptography==43.0.0
+cryptography==43.0.1
     # via -r requirements.in
-exceptiongroup==1.2.2
-    # via pytest
 iniconfig==2.0.0
     # via pytest
 jinja2==3.1.4
@@ -69,8 +67,6 @@ rpds-py==0.18.0
     #   referencing
 tenacity==9.0.0
     # via cosl
-tomli==2.0.1
-    # via pytest
 typer==0.7.0
     # via pytest-interface-tester
 typing-extensions==4.9.0

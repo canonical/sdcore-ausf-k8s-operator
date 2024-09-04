@@ -30,6 +30,8 @@ cryptography==43.0.1
     # via
     #   -c requirements.txt
     #   paramiko
+
+    # via paramiko
 decorator==5.1.1
     # via
     #   ipdb

@@ -23,11 +23,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             name=CONTAINER_NAME,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=False,
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == BlockedStatus("Scaling is not implemented for this charm")
 
@@ -39,11 +39,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=False,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == WaitingStatus("Waiting for container to start")
 
@@ -55,11 +55,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == BlockedStatus(
             "Waiting for fiveg_nrf, sdcore_config, certificates relation(s)"
@@ -77,12 +77,12 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
-            relations=[certificates_relation],
+            relations={certificates_relation},
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == BlockedStatus(
             "Waiting for fiveg_nrf, sdcore_config relation(s)"
@@ -104,12 +104,12 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
-            relations=[certificates_relation, fiveg_nrf_relation],
+            relations={certificates_relation, fiveg_nrf_relation},
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == BlockedStatus("Waiting for sdcore_config relation(s)")
 
@@ -129,12 +129,12 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
-            relations=[fiveg_nrf_relation, nms_relation],
+            relations={fiveg_nrf_relation, nms_relation},
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == BlockedStatus("Waiting for certificates relation(s)")
 
@@ -158,12 +158,12 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
-            relations=[certificates_relation, fiveg_nrf_relation, nms_relation],
+            relations={certificates_relation, fiveg_nrf_relation, nms_relation},
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == WaitingStatus("Waiting for NRF data to be available")
 
@@ -188,12 +188,12 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
-            relations=[certificates_relation, fiveg_nrf_relation, nms_relation],
+            relations={certificates_relation, fiveg_nrf_relation, nms_relation},
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == WaitingStatus("Waiting for Webui data to be available")
 
@@ -219,12 +219,12 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
-            relations=[nrf_relation, nms_relation, certificates_relation],
+            relations={nrf_relation, nms_relation, certificates_relation},
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.unit_status == WaitingStatus("Waiting for storage to be attached")
 
@@ -248,11 +248,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -260,13 +260,13 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 mounts={"config": config_mount, "certs": certs_mount},
             )
             state_in = scenario.State(
-                containers=[container],
+                containers={container},
                 leader=True,
-                relations=[nrf_relation, nms_relation, certificates_relation],
+                relations={nrf_relation, nms_relation, certificates_relation},
             )
             self.mock_check_output.return_value = b""
 
-            state_out = self.ctx.run("collect_unit_status", state_in)
+            state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
             assert state_out.unit_status == WaitingStatus(
                 "Waiting for pod IP address to be available"
@@ -292,11 +292,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -304,15 +304,15 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 mounts={"config": config_mount, "certs": certs_mount},
             )
             state_in = scenario.State(
-                containers=[container],
+                containers={container},
                 leader=True,
-                relations=[nrf_relation, nms_relation, certificates_relation],
+                relations={nrf_relation, nms_relation, certificates_relation},
             )
 
             self.mock_check_output.return_value = TEST_POD_IP
             self.mock_get_assigned_certificate.return_value = None, None
 
-            state_out = self.ctx.run("collect_unit_status", state_in)
+            state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
             assert state_out.unit_status == WaitingStatus(
                 "Waiting for certificates to be available"
@@ -338,11 +338,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -350,17 +350,17 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 mounts={"config": config_mount, "certs": certs_mount},
             )
             state_in = scenario.State(
-                containers=[container],
+                containers={container},
                 leader=True,
-                relations=[nrf_relation, nms_relation, certificates_relation],
+                relations={nrf_relation, nms_relation, certificates_relation},
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            state_out = self.ctx.run("collect_unit_status", state_in)
+            state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
             assert state_out.unit_status == WaitingStatus("Waiting for AUSF service to start")
 
@@ -384,31 +384,31 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
                 can_connect=True,
                 mounts={"config": config_mount, "certs": certs_mount},
                 layers={"ausf": Layer({"services": {"ausf": {}}})},
-                service_status={"ausf": ServiceStatus.ACTIVE},
+                service_statuses={"ausf": ServiceStatus.ACTIVE},
             )
             state_in = scenario.State(
-                containers=[container],
+                containers={container},
                 leader=True,
-                relations=[nrf_relation, nms_relation, certificates_relation],
+                relations={nrf_relation, nms_relation, certificates_relation},
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            state_out = self.ctx.run("collect_unit_status", state_in)
+            state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
             assert state_out.unit_status == ActiveStatus()
 
@@ -420,11 +420,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             can_connect=True,
         )
         state_in = scenario.State(
-            containers=[container],
+            containers={container},
             leader=True,
         )
 
-        state_out = self.ctx.run("collect_unit_status", state_in)
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
         assert state_out.workload_version == ""
 
@@ -435,7 +435,7 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
             expected_version = "1.2.3"
             workload_version_mount = scenario.Mount(
                 location="/etc",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -443,12 +443,12 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 mounts={"workload-version": workload_version_mount},
             )
             state_in = scenario.State(
-                containers=[container],
+                containers={container},
                 leader=True,
             )
             with open(f"{tempdir}/workload-version", "w") as f:
                 f.write(expected_version)
 
-            state_out = self.ctx.run("collect_unit_status", state_in)
+            state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
 
             assert state_out.workload_version == expected_version

@@ -37,11 +37,11 @@ class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -50,7 +50,7 @@ class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
             with open(f"{tempdir}/ausf.key", "w") as f:
@@ -58,12 +58,12 @@ class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
             with open(f"{tempdir}/ausf.pem", "w") as f:
                 f.write(str(provider_certificate.certificate))
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
 
-            self.ctx.run(certificates_relation.broken_event, state_in)
+            self.ctx.run(self.ctx.on.relation_broken(certificates_relation), state_in)
 
             assert not Path(f"{tempdir}/ausf.key").exists()
             assert not Path(f"{tempdir}/ausf.pem").exists()

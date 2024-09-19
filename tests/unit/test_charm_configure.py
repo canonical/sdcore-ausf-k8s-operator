@@ -40,11 +40,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -52,17 +52,17 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             with open(f"{tempdir}/ausf.key", "r") as f:
                 assert f.read() == str(private_key)
@@ -78,7 +78,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 interface="tls-certificates",
             )
             initial_certificate, initial_private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             nrf_relation = scenario.Relation(
                 endpoint="fiveg_nrf",
@@ -92,11 +92,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -104,8 +104,8 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
@@ -114,11 +114,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             with open(f"{tempdir}/ausf.pem", "w") as f:
                 f.write(str(initial_certificate.certificate))
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             with open(f"{tempdir}/ausf.key", "r") as f:
                 assert f.read() == str(private_key)
@@ -145,11 +145,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -157,13 +157,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             with open(f"{tempdir}/ausf.key", "w") as f:
                 f.write(str(private_key))
@@ -173,7 +173,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
             certificate_file_creation_time = Path(f"{tempdir}/ausf.pem").lstat().st_mtime
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             with open(f"{tempdir}/ausf.key", "r") as f:
                 assert f.read() == str(private_key)
@@ -201,11 +201,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -213,13 +213,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
             with open(f"{tempdir}/ausf.key", "w") as f:
@@ -227,7 +227,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             with open(f"{tempdir}/ausf.pem", "w") as f:
                 f.write(str(provider_certificate.certificate))
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
             with open(expected_config_file_path, "r") as expected_config_file:
@@ -251,11 +251,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -263,13 +263,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             with open(f"{tempdir}/ausf.key", "w") as f:
                 f.write(str(private_key))
@@ -283,7 +283,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             config_file_creation_time = Path(f"{tempdir}/ausfcfg.conf").lstat().st_mtime
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             assert Path(f"{tempdir}/ausfcfg.conf").lstat().st_mtime == config_file_creation_time
 
@@ -307,11 +307,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -319,13 +319,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             with open(f"{tempdir}/ausf.key", "w") as f:
                 f.write(str(private_key))
@@ -339,9 +339,9 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
 
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            state_out = self.ctx.run("update_status", state_in)
+            state_out = self.ctx.run(self.ctx.on.update_status(), state_in)
 
-            assert state_out.containers[0].layers["ausf"] == Layer(
+            assert state_out.get_container(CONTAINER_NAME).layers["ausf"] == Layer(
                 {
                     "services": {
                         "ausf": {
@@ -382,11 +382,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -394,17 +394,17 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             self.mock_restart.assert_called_once()
 
@@ -428,11 +428,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -440,13 +440,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             with open(f"{tempdir}/ausf.key", "w") as f:
                 f.write(str(private_key))
@@ -454,7 +454,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 f.write(str(provider_certificate.certificate))
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             self.mock_restart.assert_called_once()
 
@@ -473,11 +473,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -485,13 +485,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             with open(f"{tempdir}/ausf.key", "w") as f:
                 f.write(str(private_key))
@@ -505,7 +505,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 f.write(expected_config)
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             self.mock_restart.assert_not_called()
 
@@ -530,11 +530,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -542,13 +542,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             with open(f"{tempdir}/ausf.key", "w") as f:
                 f.write(str(private_key))
@@ -556,7 +556,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 f.write(str(provider_certificate.certificate))
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
             with open(expected_config_file_path, "r") as expected_config_file:
@@ -586,11 +586,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
             )
             certs_mount = scenario.Mount(
                 location="/support/TLS",
-                src=tempdir,
+                source=tempdir,
             )
             config_mount = scenario.Mount(
                 location="/free5gc/config",
-                src=tempdir,
+                source=tempdir,
             )
             container = scenario.Container(
                 name=CONTAINER_NAME,
@@ -598,13 +598,13 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 mounts={"certs": certs_mount, "config": config_mount},
             )
             state_in = scenario.State(
-                containers=[container],
-                relations=[certificates_relation, nrf_relation, nms_relation],
+                containers={container},
+                relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,
             )
             self.mock_check_output.return_value = TEST_POD_IP
             provider_certificate, private_key = example_cert_and_key(
-                tls_relation_id=certificates_relation.relation_id
+                tls_relation_id=certificates_relation.id
             )
             with open(f"{tempdir}/ausf.key", "w") as f:
                 f.write(str(private_key))
@@ -612,7 +612,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 f.write(str(provider_certificate.certificate))
             self.mock_get_assigned_certificate.return_value = provider_certificate, private_key
 
-            self.ctx.run("update_status", state_in)
+            self.ctx.run(self.ctx.on.update_status(), state_in)
 
             expected_config_file_path = Path(__file__).parent / "expected_config" / "config.conf"
             with open(expected_config_file_path, "r") as expected_config_file:

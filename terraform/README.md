@@ -16,7 +16,7 @@ rather serve as a building block for higher level modules.
 - **output.tf** - Responsible for integrating the module with other Terraform modules, primarily
   by defining potential integration endpoints (charm integrations), but also by exposing
   the application name.
-- **terraform.tf** - Defines the Terraform provider.
+- **versions.tf** - Defines the Terraform provider.
 
 ## Using sdcore-ausf-k8s base module in higher level modules
 
@@ -24,10 +24,14 @@ If you want to use `sdcore-ausf-k8s` base module as part of your Terraform modul
 like shown below:
 
 ```text
+data "juju_model" "my_model" {
+  name = "my_model_name"
+}
+
 module "ausf" {
   source = "git::https://github.com/canonical/sdcore-ausf-k8s-operator//terraform"
   
-  model_name = "juju_model_name"
+  model = juju_model.my_model.name
   (Customize configuration variables here if needed)
 }
 ```
@@ -36,14 +40,14 @@ Create integrations, for instance:
 
 ```text
 resource "juju_integration" "ausf-nrf" {
-  model = var.model_name
+  model = juju_model.my_model.name
   application {
     name     = module.ausf.app_name
-    endpoint = module.ausf.fiveg_nrf_endpoint
+    endpoint = module.ausf.requires.fiveg_nrf
   }
   application {
     name     = module.nrf.app_name
-    endpoint = module.nrf.fiveg_nrf_endpoint
+    endpoint = module.nrf.provides.fiveg_nrf
   }
 }
 ```

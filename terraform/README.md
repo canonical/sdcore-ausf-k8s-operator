@@ -40,7 +40,7 @@ Create integrations, for instance:
 
 ```text
 resource "juju_integration" "ausf-nrf" {
-  model = var.model_name
+  model = juju_model.my_model.name
   application {
     name     = module.ausf.app_name
     endpoint = module.ausf.requires.fiveg_nrf

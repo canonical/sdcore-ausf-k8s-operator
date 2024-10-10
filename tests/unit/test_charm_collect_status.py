@@ -3,8 +3,7 @@
 
 import tempfile
 
-import scenario
-from ops import ActiveStatus, BlockedStatus, WaitingStatus
+from ops import ActiveStatus, BlockedStatus, WaitingStatus, testing
 from ops.pebble import Layer, ServiceStatus
 
 from tests.unit.certificates_helpers import (
@@ -19,10 +18,10 @@ TEST_NRF_URL = "https://nrf-example.com:1234"
 
 class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_not_leader_when_collect_unit_status_then_status_is_blocked(self):
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=False,
         )
@@ -34,11 +33,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_but_container_is_not_ready_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
         self,
     ):
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=False,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
         )
@@ -50,11 +49,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_but_relations_are_not_created_when_collect_unit_status_then_status_is_blocked(  # noqa: E501
         self,
     ):
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
         )
@@ -68,15 +67,15 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_but_fiveg_nrf_relation_is_not_created_when_collect_unit_status_then_status_is_blocked(  # noqa: E501
         self,
     ):
-        certificates_relation = scenario.Relation(
+        certificates_relation = testing.Relation(
             endpoint="certificates",
             interface="tls-certificates",
         )
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
             relations={certificates_relation},
@@ -91,19 +90,19 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_but_sdcore_config_relation_is_not_created_when_collect_unit_status_then_status_is_blocked(  # noqa: E501
         self,
     ):
-        certificates_relation = scenario.Relation(
+        certificates_relation = testing.Relation(
             endpoint="certificates",
             interface="tls-certificates",
         )
-        fiveg_nrf_relation = scenario.Relation(
+        fiveg_nrf_relation = testing.Relation(
             endpoint="fiveg_nrf",
             interface="fiveg-nrf",
         )
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
             relations={certificates_relation, fiveg_nrf_relation},
@@ -116,19 +115,19 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_but_certificates_relation_is_not_created_when_collect_unit_status_then_status_is_blocked(  # noqa: E501
         self,
     ):
-        fiveg_nrf_relation = scenario.Relation(
+        fiveg_nrf_relation = testing.Relation(
             endpoint="fiveg_nrf",
             interface="fiveg-nrf",
         )
-        nms_relation = scenario.Relation(
+        nms_relation = testing.Relation(
             endpoint="sdcore_config",
             interface="sdcore-config",
         )
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
             relations={fiveg_nrf_relation, nms_relation},
@@ -141,23 +140,23 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_but_nrf_data_is_not_available_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
         self,
     ):
-        certificates_relation = scenario.Relation(
+        certificates_relation = testing.Relation(
             endpoint="certificates",
             interface="tls-certificates",
         )
-        fiveg_nrf_relation = scenario.Relation(
+        fiveg_nrf_relation = testing.Relation(
             endpoint="fiveg_nrf",
             interface="fiveg-nrf",
         )
-        nms_relation = scenario.Relation(
+        nms_relation = testing.Relation(
             endpoint="sdcore_config",
             interface="sdcore-config",
         )
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
             relations={certificates_relation, fiveg_nrf_relation, nms_relation},
@@ -170,24 +169,24 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_but_webui_data_is_not_available_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
         self,
     ):
-        certificates_relation = scenario.Relation(
+        certificates_relation = testing.Relation(
             endpoint="certificates",
             interface="tls-certificates",
         )
-        fiveg_nrf_relation = scenario.Relation(
+        fiveg_nrf_relation = testing.Relation(
             endpoint="fiveg_nrf",
             interface="fiveg-nrf",
             remote_app_data={"url": TEST_NRF_URL},
         )
-        nms_relation = scenario.Relation(
+        nms_relation = testing.Relation(
             endpoint="sdcore_config",
             interface="sdcore-config",
         )
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
             relations={certificates_relation, fiveg_nrf_relation, nms_relation},
@@ -200,25 +199,25 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_unit_is_leader_and_container_is_ready_and_relations_are_created_and_nrf_data_is_available_but_storage_is_not_ready_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
         self,
     ):
-        nrf_relation = scenario.Relation(
+        nrf_relation = testing.Relation(
             endpoint="fiveg_nrf",
             interface="fiveg-nrf",
             remote_app_data={"url": TEST_NRF_URL},
         )
-        nms_relation = scenario.Relation(
+        nms_relation = testing.Relation(
             endpoint="sdcore_config",
             interface="sdcore-config",
             remote_app_data={"webui_url": "whatever"},
         )
-        certificates_relation = scenario.Relation(
+        certificates_relation = testing.Relation(
             endpoint="certificates",
             interface="tls-certificates",
         )
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
             relations={nrf_relation, nms_relation, certificates_relation},
@@ -232,34 +231,34 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
-            nrf_relation = scenario.Relation(
+            nrf_relation = testing.Relation(
                 endpoint="fiveg_nrf",
                 interface="fiveg-nrf",
                 remote_app_data={"url": TEST_NRF_URL},
             )
-            nms_relation = scenario.Relation(
+            nms_relation = testing.Relation(
                 endpoint="sdcore_config",
                 interface="sdcore-config",
                 remote_app_data={"webui_url": "whatever"},
             )
-            certificates_relation = scenario.Relation(
+            certificates_relation = testing.Relation(
                 endpoint="certificates",
                 interface="tls-certificates",
             )
-            certs_mount = scenario.Mount(
+            certs_mount = testing.Mount(
                 location="/support/TLS",
                 source=tempdir,
             )
-            config_mount = scenario.Mount(
+            config_mount = testing.Mount(
                 location="/free5gc/config",
                 source=tempdir,
             )
-            container = scenario.Container(
+            container = testing.Container(
                 name=CONTAINER_NAME,
                 can_connect=True,
                 mounts={"config": config_mount, "certs": certs_mount},
             )
-            state_in = scenario.State(
+            state_in = testing.State(
                 containers={container},
                 leader=True,
                 relations={nrf_relation, nms_relation, certificates_relation},
@@ -276,34 +275,34 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
-            nrf_relation = scenario.Relation(
+            nrf_relation = testing.Relation(
                 endpoint="fiveg_nrf",
                 interface="fiveg-nrf",
                 remote_app_data={"url": TEST_NRF_URL},
             )
-            nms_relation = scenario.Relation(
+            nms_relation = testing.Relation(
                 endpoint="sdcore_config",
                 interface="sdcore-config",
                 remote_app_data={"webui_url": "whatever"},
             )
-            certificates_relation = scenario.Relation(
+            certificates_relation = testing.Relation(
                 endpoint="certificates",
                 interface="tls-certificates",
             )
-            certs_mount = scenario.Mount(
+            certs_mount = testing.Mount(
                 location="/support/TLS",
                 source=tempdir,
             )
-            config_mount = scenario.Mount(
+            config_mount = testing.Mount(
                 location="/free5gc/config",
                 source=tempdir,
             )
-            container = scenario.Container(
+            container = testing.Container(
                 name=CONTAINER_NAME,
                 can_connect=True,
                 mounts={"config": config_mount, "certs": certs_mount},
             )
-            state_in = scenario.State(
+            state_in = testing.State(
                 containers={container},
                 leader=True,
                 relations={nrf_relation, nms_relation, certificates_relation},
@@ -322,34 +321,34 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
-            nrf_relation = scenario.Relation(
+            nrf_relation = testing.Relation(
                 endpoint="fiveg_nrf",
                 interface="fiveg-nrf",
                 remote_app_data={"url": TEST_NRF_URL},
             )
-            nms_relation = scenario.Relation(
+            nms_relation = testing.Relation(
                 endpoint="sdcore_config",
                 interface="sdcore-config",
                 remote_app_data={"webui_url": "whatever"},
             )
-            certificates_relation = scenario.Relation(
+            certificates_relation = testing.Relation(
                 endpoint="certificates",
                 interface="tls-certificates",
             )
-            certs_mount = scenario.Mount(
+            certs_mount = testing.Mount(
                 location="/support/TLS",
                 source=tempdir,
             )
-            config_mount = scenario.Mount(
+            config_mount = testing.Mount(
                 location="/free5gc/config",
                 source=tempdir,
             )
-            container = scenario.Container(
+            container = testing.Container(
                 name=CONTAINER_NAME,
                 can_connect=True,
                 mounts={"config": config_mount, "certs": certs_mount},
             )
-            state_in = scenario.State(
+            state_in = testing.State(
                 containers={container},
                 leader=True,
                 relations={nrf_relation, nms_relation, certificates_relation},
@@ -368,36 +367,36 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
-            nrf_relation = scenario.Relation(
+            nrf_relation = testing.Relation(
                 endpoint="fiveg_nrf",
                 interface="fiveg-nrf",
                 remote_app_data={"url": TEST_NRF_URL},
             )
-            nms_relation = scenario.Relation(
+            nms_relation = testing.Relation(
                 endpoint="sdcore_config",
                 interface="sdcore-config",
                 remote_app_data={"webui_url": "whatever"},
             )
-            certificates_relation = scenario.Relation(
+            certificates_relation = testing.Relation(
                 endpoint="certificates",
                 interface="tls-certificates",
             )
-            certs_mount = scenario.Mount(
+            certs_mount = testing.Mount(
                 location="/support/TLS",
                 source=tempdir,
             )
-            config_mount = scenario.Mount(
+            config_mount = testing.Mount(
                 location="/free5gc/config",
                 source=tempdir,
             )
-            container = scenario.Container(
+            container = testing.Container(
                 name=CONTAINER_NAME,
                 can_connect=True,
                 mounts={"config": config_mount, "certs": certs_mount},
                 layers={"ausf": Layer({"services": {"ausf": {}}})},
                 service_statuses={"ausf": ServiceStatus.ACTIVE},
             )
-            state_in = scenario.State(
+            state_in = testing.State(
                 containers={container},
                 leader=True,
                 relations={nrf_relation, nms_relation, certificates_relation},
@@ -415,11 +414,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     def test_given_no_workload_version_file_when_collect_unit_status_then_workload_version_not_set(
         self,
     ):
-        container = scenario.Container(
+        container = testing.Container(
             name=CONTAINER_NAME,
             can_connect=True,
         )
-        state_in = scenario.State(
+        state_in = testing.State(
             containers={container},
             leader=True,
         )
@@ -433,16 +432,16 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
     ):
         with tempfile.TemporaryDirectory() as tempdir:
             expected_version = "1.2.3"
-            workload_version_mount = scenario.Mount(
+            workload_version_mount = testing.Mount(
                 location="/etc",
                 source=tempdir,
             )
-            container = scenario.Container(
+            container = testing.Container(
                 name=CONTAINER_NAME,
                 can_connect=True,
                 mounts={"workload-version": workload_version_mount},
             )
-            state_in = scenario.State(
+            state_in = testing.State(
                 containers={container},
                 leader=True,
             )

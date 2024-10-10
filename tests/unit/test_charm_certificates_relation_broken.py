@@ -4,7 +4,7 @@
 import tempfile
 from pathlib import Path
 
-import scenario
+from ops import testing
 
 from tests.unit.certificates_helpers import (
     example_cert_and_key,
@@ -21,29 +21,29 @@ class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
         self,
     ):
         with tempfile.TemporaryDirectory() as tempdir:
-            certificates_relation = scenario.Relation(
+            certificates_relation = testing.Relation(
                 endpoint="certificates",
                 interface="tls-certificates",
             )
-            nrf_relation = scenario.Relation(
+            nrf_relation = testing.Relation(
                 endpoint="fiveg_nrf",
                 interface="fiveg-nrf",
                 remote_app_data={"url": TEST_NRF_URL},
             )
-            nms_relation = scenario.Relation(
+            nms_relation = testing.Relation(
                 endpoint="sdcore_config",
                 interface="sdcore-config",
                 remote_app_data={"webui_url": "whatever"},
             )
-            certs_mount = scenario.Mount(
+            certs_mount = testing.Mount(
                 location="/support/TLS",
                 source=tempdir,
             )
-            config_mount = scenario.Mount(
+            config_mount = testing.Mount(
                 location="/free5gc/config",
                 source=tempdir,
             )
-            container = scenario.Container(
+            container = testing.Container(
                 name=CONTAINER_NAME,
                 can_connect=True,
                 mounts={"certs": certs_mount, "config": config_mount},
@@ -57,7 +57,7 @@ class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
                 f.write(str(private_key))
             with open(f"{tempdir}/ausf.pem", "w") as f:
                 f.write(str(provider_certificate.certificate))
-            state_in = scenario.State(
+            state_in = testing.State(
                 containers={container},
                 relations={certificates_relation, nrf_relation, nms_relation},
                 leader=True,

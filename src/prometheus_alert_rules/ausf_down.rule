@@ -1,0 +1,8 @@
+alert: AusfDown
+expr: up == 0
+for: 5m
+labels:
+    severity: critical
+annotations:
+    summary: "AUSF availability"
+    description: "AUSF is unavailable"

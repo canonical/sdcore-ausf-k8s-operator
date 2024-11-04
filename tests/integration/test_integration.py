@@ -153,6 +153,7 @@ async def _deploy_mongodb(ops_test: OpsTest):
         DB_APPLICATION_NAME,
         application_name=DB_APPLICATION_NAME,
         channel=DB_APPLICATION_CHANNEL,
+        trust=True,
     )
 
 

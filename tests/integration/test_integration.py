@@ -18,7 +18,7 @@ METADATA = yaml.safe_load(Path("./charmcraft.yaml").read_text())
 APP_NAME = METADATA["name"]
 
 DB_APPLICATION_NAME = "mongodb-k8s"
-DB_APPLICATION_CHANNEL = "6/beta"
+DB_APPLICATION_CHANNEL = "6/stable"
 NRF_APPLICATION_NAME = "sdcore-nrf-k8s"
 NRF_APPLICATION_CHANNEL = "1.5/edge"
 NMS_APPLICATION_NAME = "sdcore-nms-k8s"

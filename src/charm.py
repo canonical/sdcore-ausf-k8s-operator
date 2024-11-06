@@ -77,6 +77,7 @@ class AUSFOperatorCharm(CharmBase):
         self._webui = SdcoreConfigRequires(charm=self, relation_name=SDCORE_CONFIG_RELATION_NAME)
         self._metrics_endpoint = MetricsEndpointProvider(
             self,
+            refresh_event=[self.on.update_status],
             jobs=[
                 {
                     "static_configs": [{"targets": [f"*:{PROMETHEUS_PORT}"]}],

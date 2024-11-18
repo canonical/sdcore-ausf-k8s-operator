@@ -52,7 +52,6 @@ async def deploy(ops_test: OpsTest, request):
     )
 
 
-
 @pytest.mark.abort_on_fail
 async def test_relate_and_wait_for_active_status(ops_test: OpsTest, deploy):
     assert ops_test.model

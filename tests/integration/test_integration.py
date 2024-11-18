@@ -37,9 +37,9 @@ async def deploy(ops_test: OpsTest, request):
     assert ops_test.model
     await _deploy_mongodb(ops_test)
     await _deploy_tls_provider(ops_test)
+    await _deploy_nms(ops_test)
     await _deploy_nrf(ops_test)
     await _deploy_grafana_agent(ops_test)
-    await _deploy_nms(ops_test)
     charm = Path(request.config.getoption("--charm_path")).resolve()
     resources = {
         "ausf-image": METADATA["resources"]["ausf-image"]["upstream-source"],

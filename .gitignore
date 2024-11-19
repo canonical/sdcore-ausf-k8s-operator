@@ -4,6 +4,9 @@
 .tox/
 venv/
 build/
+.charm_tracing_buffer.raw
+build/
+src/sdcore_ausf_k8s_operator.egg-info/
 
 # Python
 **/venv/**

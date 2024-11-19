@@ -1,8 +1,0 @@
-ops
-pydantic<3.0
-pytest-interface-tester
-jsonschema
-cryptography
-cosl
-jinja2
-rpds-py==0.18.1

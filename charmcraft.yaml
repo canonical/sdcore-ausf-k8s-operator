@@ -61,6 +61,8 @@ platforms:
 parts:
   charm:
     source: .
+    charm-requirements:
+      - requirements.txt
     plugin: charm
     build-packages:
       - libffi-dev

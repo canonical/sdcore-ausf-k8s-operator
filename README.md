@@ -6,9 +6,9 @@ A Charmed Operator for Aether SD-Core's Authentication Server Function (AUSF) co
 ## Usage
 
 ```bash
-juju deploy sdcore-ausf-k8s --channel=1.5/edge
-juju deploy sdcore-nrf-k8s --channel=1.5/edge
-juju deploy sdcore-nms-k8s --channel=1.5/edge
+juju deploy sdcore-ausf-k8s --channel=1.6/edge
+juju deploy sdcore-nrf-k8s --channel=1.6/edge
+juju deploy sdcore-nms-k8s --channel=1.6/edge
 juju deploy mongodb-k8s --trust --channel=6/stable
 juju deploy self-signed-certificates
 juju integrate sdcore-nrf-k8s:database mongodb-k8s

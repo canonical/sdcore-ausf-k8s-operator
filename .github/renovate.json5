@@ -36,4 +36,6 @@
       "groupName": "Terraform"
     },
   ],
+  // Bumping "pytest-asyncio" over 0.23 breaks the integration tests
+  "ignoreDeps": ["pytest-asyncio"]
 }

@@ -20,15 +20,18 @@
   "packageRules": [
     // Later rules override earlier rules
     {
+      "matchBaseBranches": ["main", "v*"],
       "matchManagers": ["pep621"],
       "rangeStrategy": "bump",
       "groupName": "Python dependencies"
     },
     {
+      "matchBaseBranches": ["main", "v*"],
       "matchManagers": ["github-actions"],
       "groupName": "GitHub actions"
     },
     {
+      "matchBaseBranches": ["main", "v*"],
       "matchManagers": ["terraform"],
       "groupName": "Terraform"
     },

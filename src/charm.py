@@ -7,7 +7,7 @@
 import logging
 from ipaddress import IPv4Address
 from subprocess import check_output
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from charms.loki_k8s.v1.loki_push_api import LogForwarder
 from charms.prometheus_k8s.v0.prometheus_scrape import (
@@ -126,7 +126,7 @@ class AUSFOperatorCharm(CharmBase):
         should_restart = config_update_required or certificate_update_required
         self._configure_pebble(restart=should_restart)
 
-    def _on_collect_unit_status(self, event: CollectStatusEvent):
+    def _on_collect_unit_status(self, event: CollectStatusEvent):  # noqa C901
         """Check the unit status and set to Unit when CollectStatusEvent is fired.
 
         Args:
@@ -145,6 +145,13 @@ class AUSFOperatorCharm(CharmBase):
         if not self._container.can_connect():
             event.add_status(WaitingStatus("Waiting for container to start"))
             logger.info("Waiting for container to start")
+            return
+
+        if invalid_configs := self._get_invalid_configs():
+            event.add_status(
+                BlockedStatus(f"The following configurations are not valid: {invalid_configs}")
+            )
+            logger.info("The following configurations are not valid: %s", invalid_configs)
             return
 
         self.unit.set_workload_version(self._get_workload_version())
@@ -248,6 +255,8 @@ class AUSFOperatorCharm(CharmBase):
         """
         if not self._container.can_connect():
             return False
+        if self._get_invalid_configs():
+            return False
         if self._missing_relations():
             return False
         if not self._nrf_data_is_available:
@@ -272,6 +281,9 @@ class AUSFOperatorCharm(CharmBase):
             return ""
         if not self._webui.webui_url:
             return ""
+        if not (log_level := self._get_log_level_config()):
+            raise ValueError("Log level configuration value is empty")
+
         return self._render_config_file(
             ausf_group_id=AUSF_GROUP_ID,
             ausf_ip=pod_ip,
@@ -279,6 +291,7 @@ class AUSFOperatorCharm(CharmBase):
             webui_url=self._webui.webui_url,
             sbi_port=SBI_PORT,
             scheme="https",
+            log_level=log_level,
         )
 
     def _is_config_update_required(self, content: str) -> bool:
@@ -367,6 +380,24 @@ class AUSFOperatorCharm(CharmBase):
         )
         logger.info("Pushed private key to workload")
 
+    def _get_invalid_configs(self) -> list[str]:
+        """Return list of invalid configurations.
+
+        Returns:
+            list: List of strings matching config keys.
+        """
+        invalid_configs = []
+        if not self._is_log_level_valid():
+            invalid_configs.append("log-level")
+        return invalid_configs
+
+    def _get_log_level_config(self) -> Optional[str]:
+        return cast(Optional[str], self.model.config.get("log-level"))
+
+    def _is_log_level_valid(self) -> bool:
+        log_level = self._get_log_level_config()
+        return log_level in ["debug", "info", "warn", "error", "fatal", "panic"]
+
     def _get_workload_version(self) -> str:
         """Return the workload version.
 
@@ -394,6 +425,7 @@ class AUSFOperatorCharm(CharmBase):
         nrf_url: str,
         webui_url: str,
         scheme: str,
+        log_level: str,
     ):
         """Render the AUSF config file.
 
@@ -404,6 +436,7 @@ class AUSFOperatorCharm(CharmBase):
             webui_url (str): URL of the Webui.
             sbi_port (int): AUSF SBi port.
             scheme (str): SBI Interface scheme ("http" or "https")
+            log_level (str): Log level for the AUSF.
         """
         jinja2_environment = Environment(loader=FileSystemLoader(CONFIG_TEMPLATE_DIR))
         template = jinja2_environment.get_template(CONFIG_TEMPLATE_NAME)
@@ -414,6 +447,7 @@ class AUSFOperatorCharm(CharmBase):
             webui_url=webui_url,
             sbi_port=sbi_port,
             scheme=scheme,
+            log_level=log_level,
         )
         return content
 
@@ -508,11 +542,6 @@ class AUSFOperatorCharm(CharmBase):
             dict: Environment variables.
         """
         return {
-            "GOTRACEBACK": "crash",
-            "GRPC_GO_LOG_VERBOSITY_LEVEL": "99",
-            "GRPC_GO_LOG_SEVERITY_LEVEL": "info",
-            "GRPC_TRACE": "all",
-            "GRPC_VERBOSITY": "DEBUG",
             "POD_IP": _get_pod_ip(),
             "MANAGED_BY_CONFIG_POD": "true",
         }

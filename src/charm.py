@@ -255,6 +255,8 @@ class AUSFOperatorCharm(CharmBase):
         """
         if not self._container.can_connect():
             return False
+        if self._get_invalid_configs():
+            return False
         if self._missing_relations():
             return False
         if not self._nrf_data_is_available:

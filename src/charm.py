@@ -542,11 +542,6 @@ class AUSFOperatorCharm(CharmBase):
             dict: Environment variables.
         """
         return {
-            "GOTRACEBACK": "crash",
-            "GRPC_GO_LOG_VERBOSITY_LEVEL": "99",
-            "GRPC_GO_LOG_SEVERITY_LEVEL": "info",
-            "GRPC_TRACE": "all",
-            "GRPC_VERBOSITY": "DEBUG",
             "POD_IP": _get_pod_ip(),
             "MANAGED_BY_CONFIG_POD": "true",
         }

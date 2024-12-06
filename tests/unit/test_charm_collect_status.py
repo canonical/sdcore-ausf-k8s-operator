@@ -46,6 +46,22 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
 
         assert state_out.unit_status == WaitingStatus("Waiting for container to start")
 
+    def test_given_invalid_log_level_config_when_collect_unit_status_then_status_is_blocked(
+        self,
+    ):
+        container = testing.Container(name="ausf", can_connect=True)
+        state_in = testing.State(
+            leader=True,
+            config={"log-level": "invalid"},
+            containers={container},
+        )
+
+        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
+
+        assert state_out.unit_status == BlockedStatus(
+            "The following configurations are not valid: ['log-level']"
+        )
+
     def test_given_unit_is_leader_and_container_is_ready_but_relations_are_not_created_when_collect_unit_status_then_status_is_blocked(  # noqa: E501
         self,
     ):

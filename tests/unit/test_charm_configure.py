@@ -349,11 +349,6 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                             "override": "replace",
                             "command": "/bin/ausf --ausfcfg /free5gc/config/ausfcfg.conf",
                             "environment": {
-                                "GOTRACEBACK": "crash",
-                                "GRPC_GO_LOG_VERBOSITY_LEVEL": "99",
-                                "GRPC_GO_LOG_SEVERITY_LEVEL": "info",
-                                "GRPC_TRACE": "all",
-                                "GRPC_VERBOSITY": "DEBUG",
                                 "POD_IP": "1.2.3.4",
                                 "MANAGED_BY_CONFIG_POD": "true",
                             },

@@ -152,7 +152,7 @@ async def _deploy_nrf(ops_test: OpsTest):
         NRF_APPLICATION_NAME,
         application_name=NRF_APPLICATION_NAME,
         channel=NRF_APPLICATION_CHANNEL,
-        series=SDCORE_CHARMS_SERIES, # TODO: This should be replaced with base="ubuntu@24.04" once it's properly supported # noqa: E501
+        series=SDCORE_CHARMS_SERIES,  # TODO: This should be replaced with base="ubuntu@24.04" once it's properly supported # noqa: E501
     )
     await ops_test.model.integrate(relation1=DB_APPLICATION_NAME, relation2=NRF_APPLICATION_NAME)
     await ops_test.model.integrate(relation1=NRF_APPLICATION_NAME, relation2=TLS_PROVIDER_NAME)
@@ -168,7 +168,7 @@ async def _deploy_nms(ops_test: OpsTest):
         NMS_APPLICATION_NAME,
         application_name=NMS_APPLICATION_NAME,
         channel=NMS_APPLICATION_CHANNEL,
-        series=SDCORE_CHARMS_SERIES, # TODO: This should be replaced with base="ubuntu@24.04" once it's properly supported # noqa: E501
+        series=SDCORE_CHARMS_SERIES,  # TODO: This should be replaced with base="ubuntu@24.04" once it's properly supported # noqa: E501
     )
     await ops_test.model.integrate(
         relation1=f"{NMS_APPLICATION_NAME}:common_database", relation2=DB_APPLICATION_NAME

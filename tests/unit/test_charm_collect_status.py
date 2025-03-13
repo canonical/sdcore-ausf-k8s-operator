@@ -262,11 +262,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 interface="tls-certificates",
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -306,11 +306,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 interface="tls-certificates",
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -352,11 +352,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 interface="tls-certificates",
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -398,11 +398,11 @@ class TestCharmCollectStatus(AUSFUnitTestFixtures):
                 interface="tls-certificates",
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(

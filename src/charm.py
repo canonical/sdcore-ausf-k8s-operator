@@ -42,11 +42,11 @@ logger = logging.getLogger(__name__)
 
 AUSF_GROUP_ID = "ausfGroup001"
 SBI_PORT = 29509
-CONFIG_DIR = "/free5gc/config"
+CONFIG_DIR = "/sdcore/config"
 CONFIG_FILE_NAME = "ausfcfg.conf"
 CONFIG_TEMPLATE_DIR = "src/templates/"
 CONFIG_TEMPLATE_NAME = "ausfcfg.conf.j2"
-CERTS_DIR_PATH = "/support/TLS"  # Certificate paths are hardcoded in AUSF code
+CERTS_DIR_PATH = "/sdcore/certs"
 PRIVATE_KEY_NAME = "ausf.key"
 CERTIFICATE_NAME = "ausf.pem"
 CERTIFICATE_COMMON_NAME = "ausf.sdcore"
@@ -291,6 +291,8 @@ class AUSFOperatorCharm(CharmBase):
             webui_url=self._webui.webui_url,
             sbi_port=SBI_PORT,
             scheme="https",
+            tls_pem=f"{CERTS_DIR_PATH}/{CERTIFICATE_NAME}",
+            tls_key=f"{CERTS_DIR_PATH}/{PRIVATE_KEY_NAME}",
             log_level=log_level,
         )
 
@@ -425,6 +427,8 @@ class AUSFOperatorCharm(CharmBase):
         nrf_url: str,
         webui_url: str,
         scheme: str,
+        tls_pem: str,
+        tls_key: str,
         log_level: str,
     ):
         """Render the AUSF config file.
@@ -436,6 +440,8 @@ class AUSFOperatorCharm(CharmBase):
             webui_url (str): URL of the Webui.
             sbi_port (int): AUSF SBi port.
             scheme (str): SBI Interface scheme ("http" or "https")
+            tls_pem (str): Path to the TLS certificate.
+            tls_key (str): Path to the TLS private key.
             log_level (str): Log level for the AUSF.
         """
         jinja2_environment = Environment(loader=FileSystemLoader(CONFIG_TEMPLATE_DIR))
@@ -447,6 +453,8 @@ class AUSFOperatorCharm(CharmBase):
             webui_url=webui_url,
             sbi_port=sbi_port,
             scheme=scheme,
+            tls_pem=tls_pem,
+            tls_key=tls_key,
             log_level=log_level,
         )
         return content

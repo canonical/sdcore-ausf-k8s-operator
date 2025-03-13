@@ -16,9 +16,9 @@ containers:
     resource: ausf-image
     mounts:
       - storage: config
-        location: /free5gc/config
+        location: /sdcore/config
       - storage: certs
-        location: /support/TLS
+        location: /sdcore/certs
 
 resources:
   ausf-image:

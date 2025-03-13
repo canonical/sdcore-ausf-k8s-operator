@@ -36,11 +36,11 @@ class TestCharmCertificateRelationBroken(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": "whatever"},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(

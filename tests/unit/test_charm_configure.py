@@ -347,7 +347,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                         "ausf": {
                             "startup": "enabled",
                             "override": "replace",
-                            "command": "/bin/ausf --ausfcfg /free5gc/config/ausfcfg.conf",
+                            "command": "/bin/ausf --cfg /free5gc/config/ausfcfg.conf",
                             "environment": {
                                 "POD_IP": "1.2.3.4",
                                 "MANAGED_BY_CONFIG_POD": "true",

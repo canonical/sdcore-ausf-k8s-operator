@@ -527,7 +527,7 @@ class AUSFOperatorCharm(CharmBase):
                     self._service_name: {
                         "override": "replace",
                         "startup": "enabled",
-                        "command": f"/bin/ausf --ausfcfg {CONFIG_DIR}/{CONFIG_FILE_NAME}",
+                        "command": f"/bin/ausf --cfg {CONFIG_DIR}/{CONFIG_FILE_NAME}",
                         "environment": self._ausf_environment_variables,
                     },
                 },

@@ -39,11 +39,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": "whatever"},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -91,11 +91,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": "whatever"},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -144,11 +144,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": "whatever"},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -200,11 +200,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": TEST_WEBUI_URL},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -250,11 +250,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"url": TEST_NRF_URL},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -306,11 +306,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": TEST_WEBUI_URL},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -347,7 +347,7 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                         "ausf": {
                             "startup": "enabled",
                             "override": "replace",
-                            "command": "/bin/ausf --ausfcfg /free5gc/config/ausfcfg.conf",
+                            "command": "/bin/ausf --cfg /sdcore/config/ausfcfg.conf",
                             "environment": {
                                 "POD_IP": "1.2.3.4",
                                 "MANAGED_BY_CONFIG_POD": "true",
@@ -376,11 +376,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": TEST_WEBUI_URL},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -422,11 +422,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": TEST_WEBUI_URL},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -467,11 +467,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"url": TEST_NRF_URL},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -524,11 +524,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": TEST_WEBUI_URL},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(
@@ -580,11 +580,11 @@ class TestCharmConfigure(AUSFUnitTestFixtures):
                 remote_app_data={"webui_url": expected_webui_url},
             )
             certs_mount = testing.Mount(
-                location="/support/TLS",
+                location="/sdcore/certs",
                 source=tempdir,
             )
             config_mount = testing.Mount(
-                location="/free5gc/config",
+                location="/sdcore/config",
                 source=tempdir,
             )
             container = testing.Container(

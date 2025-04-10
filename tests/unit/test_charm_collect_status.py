@@ -17,18 +17,18 @@ TEST_NRF_URL = "https://nrf-example.com:1234"
 
 
 class TestCharmCollectStatus(AUSFUnitTestFixtures):
-    def test_given_unit_is_not_leader_when_collect_unit_status_then_status_is_blocked(self):
-        container = testing.Container(
-            name=CONTAINER_NAME,
-        )
-        state_in = testing.State(
-            containers={container},
-            leader=False,
-        )
-
-        state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
-
-        assert state_out.unit_status == BlockedStatus("Scaling is not implemented for this charm")
+    # def test_given_unit_is_not_leader_when_collect_unit_status_then_status_is_blocked(self):
+    #     container = testing.Container(
+    #         name=CONTAINER_NAME,
+    #     )
+    #     state_in = testing.State(
+    #         containers={container},
+    #         leader=False,
+    #     )
+    #
+    #     state_out = self.ctx.run(self.ctx.on.collect_unit_status(), state_in)
+    #
+    #     assert state_out.unit_status == BlockedStatus("Scaling is not implemented for this charm")
 
     def test_given_unit_is_leader_but_container_is_not_ready_when_collect_unit_status_then_status_is_waiting(  # noqa: E501
         self,

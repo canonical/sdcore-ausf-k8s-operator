@@ -64,13 +64,13 @@ class AUSFOperatorCharm(CharmBase):
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
-        if not self.unit.is_leader():
-            # NOTE: In cases where leader status is lost before the charm is
-            # finished processing all teardown events, this prevents teardown
-            # event code from running. Luckily, for this charm, none of the
-            # teardown code is necessary to perform if we're removing the
-            # charm.
-            return
+        # if not self.unit.is_leader():
+        #     # NOTE: In cases where leader status is lost before the charm is
+        #     # finished processing all teardown events, this prevents teardown
+        #     # event code from running. Luckily, for this charm, none of the
+        #     # teardown code is necessary to perform if we're removing the
+        #     # charm.
+        #     return
         self._container_name = self._service_name = "ausf"
         self._container = self.unit.get_container(self._container_name)
         self._nrf_requires = NRFRequires(charm=self, relation_name=NRF_RELATION_NAME)
@@ -132,15 +132,15 @@ class AUSFOperatorCharm(CharmBase):
         Args:
             event: CollectStatusEvent
         """
-        if not self.unit.is_leader():
-            # NOTE: In cases where leader status is lost before the charm is
-            # finished processing all teardown events, this prevents teardown
-            # event code from running. Luckily, for this charm, none of the
-            # teardown code is necessary to perform if we're removing the
-            # charm.
-            event.add_status(BlockedStatus("Scaling is not implemented for this charm"))
-            logger.info("Scaling is not implemented for this charm")
-            return
+        # if not self.unit.is_leader():
+        #     # NOTE: In cases where leader status is lost before the charm is
+        #     # finished processing all teardown events, this prevents teardown
+        #     # event code from running. Luckily, for this charm, none of the
+        #     # teardown code is necessary to perform if we're removing the
+        #     # charm.
+        #     event.add_status(BlockedStatus("Scaling is not implemented for this charm"))
+        #     logger.info("Scaling is not implemented for this charm")
+        #     return
 
         if not self._container.can_connect():
             event.add_status(WaitingStatus("Waiting for container to start"))

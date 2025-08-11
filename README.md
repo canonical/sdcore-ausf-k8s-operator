@@ -1,7 +1,11 @@
 # Aether SD-Core AUSF Operator (k8s)
 [![CharmHub Badge](https://charmhub.io/sdcore-ausf-k8s/badge.svg)](https://charmhub.io/sdcore-ausf-k8s)
 
-A Charmed Operator for Aether SD-Core's Authentication Server Function (AUSF) component for K8s. 
+> **:warning: Deprecation Notice!**
+>
+> This project is deprecated and will not receive further updates. Please refer to the upstream [Aether](https://aetherproject.org/) project to continue using Aether.
+
+A Charmed Operator for Aether SD-Core's Authentication Server Function (AUSF) component for K8s.
 
 ## Usage
 

@@ -20,7 +20,7 @@ test = [
     "juju>=3.6.1.1",
     "pytest",
     "pytest-operator",
-    "pytest-asyncio<1.1",
+    "pytest-asyncio<1.2",
 ]
 dev = [
     "codespell",
